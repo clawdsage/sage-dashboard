@@ -6,6 +6,7 @@ A modern, professional dashboard for tracking and managing AI sub-agent work. Bu
 
 - **Real-time Monitoring**: Track active sub-agents, their progress, and resource usage
 - **Project Management**: Organize AI projects with status tracking and deadlines
+- **Review Queue**: Approve, reject, or request changes for sub-agent outputs with feedback
 - **Analytics Dashboard**: Visualize performance metrics and costs
 - **Team Collaboration**: Manage team members and their access levels
 - **Dark Theme**: Professional dark theme optimized for long sessions

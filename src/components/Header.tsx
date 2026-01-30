@@ -1,6 +1,10 @@
 import { Search, Bell, HelpCircle, Plus } from 'lucide-react'
 
-const Header = () => {
+interface HeaderProps {
+  onNewProjectClick: () => void
+}
+
+const Header = ({ onNewProjectClick }: HeaderProps) => {
   return (
     <header className="bg-background-sidebar border-b border-slate-800 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -18,7 +22,10 @@ const Header = () => {
 
         {/* Right side actions */}
         <div className="flex items-center gap-4">
-          <button className="btn-primary flex items-center gap-2">
+          <button 
+            onClick={onNewProjectClick}
+            className="btn-primary flex items-center gap-2 hover:scale-105 transition-transform"
+          >
             <Plus className="w-4 h-4" />
             New Project
           </button>

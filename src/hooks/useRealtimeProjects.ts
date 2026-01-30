@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { retryWithBackoff, isOnline } from '../lib/retry'
 import type { Database } from '../types/supabase'
 
 type Project = Database['public']['Tables']['projects']['Row']
@@ -9,21 +10,36 @@ export const useRealtimeProjects = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
-  // Fetch initial projects
+  // Fetch initial projects with retry logic
   const fetchProjects = useCallback(async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false })
+      
+      // Check network connectivity
+      if (!isOnline()) {
+        throw new Error('NETWORK_ERROR: Unable to fetch projects. Please check your internet connection.')
+      }
+      
+      const { data, error } = await retryWithBackoff(async () => {
+        const result = await supabase
+          .from('projects')
+          .select('*')
+          .order('created_at', { ascending: false })
+        
+        if (result.error) throw result.error
+        return result
+      }, {
+        maxRetries: 3,
+        initialDelay: 1000,
+        retryableErrors: ['NETWORK_ERROR', 'CONNECTION_ERROR', 'TIMEOUT']
+      })
 
-      if (error) throw error
       setProjects(data || [])
       setError(null)
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load projects'
       console.error('Error fetching projects:', err)
-      setError(err as Error)
+      setError(new Error(errorMessage))
     } finally {
       setLoading(false)
     }

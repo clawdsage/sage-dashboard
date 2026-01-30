@@ -13,7 +13,7 @@ const Login = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // Handle login logic here
-    console.log('Login attempt:', formData)
+    // Login attempt - handle authentication logic here
   }
 
   return (

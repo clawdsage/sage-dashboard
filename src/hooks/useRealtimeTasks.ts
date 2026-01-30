@@ -28,8 +28,9 @@ export const useRealtimeTasks = (projectId?: string) => {
       setTasks(data || [])
       setError(null)
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load tasks'
       console.error('Error fetching tasks:', err)
-      setError(err as Error)
+      setError(new Error(`Unable to load tasks: ${errorMessage}. Please try again.`))
     } finally {
       setLoading(false)
     }

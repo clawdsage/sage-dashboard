@@ -41,8 +41,9 @@ const ReviewQueue = () => {
       setSubagentRuns(data || [])
       setError(null)
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load review queue'
       console.error('Error fetching review queue:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load review queue')
+      setError(`Unable to load review queue: ${errorMessage}. Please try again.`)
     } finally {
       setLoading(false)
     }
@@ -63,7 +64,7 @@ const ReviewQueue = () => {
           filter: 'status=eq.completed'
         },
         (payload) => {
-          console.log('Review queue change received:', payload)
+          // Review queue change received - updating state
           
           // Update local state based on event type
           switch (payload.eventType) {
@@ -155,8 +156,9 @@ const ReviewQueue = () => {
       })
 
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
       console.error('Error updating review status:', err)
-      alert(`Failed to ${action} output: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      alert(`Failed to ${action} output: ${errorMessage}. Please try again.`)
     } finally {
       setUpdatingId(null)
     }

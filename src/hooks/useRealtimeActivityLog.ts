@@ -23,8 +23,9 @@ export const useRealtimeActivityLog = (limit = 10) => {
       setActivities(data || [])
       setError(null)
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load activity log'
       console.error('Error fetching activity log:', err)
-      setError(err as Error)
+      setError(new Error(`Unable to load activity: ${errorMessage}. Please refresh the page.`))
     } finally {
       setLoading(false)
     }
@@ -44,7 +45,7 @@ export const useRealtimeActivityLog = (limit = 10) => {
           table: 'activity_log'
         },
         (payload) => {
-          console.log('Activity log change received:', payload)
+          // Activity log change received - updating state
           
           // Smooth animation trigger with different intensity based on event type
           const event = new CustomEvent('data-update', { 

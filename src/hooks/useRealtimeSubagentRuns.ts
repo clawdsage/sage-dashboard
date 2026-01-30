@@ -28,8 +28,9 @@ export const useRealtimeSubagentRuns = (projectId?: string) => {
       setSubagentRuns(data || [])
       setError(null)
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load subagent runs'
       console.error('Error fetching subagent runs:', err)
-      setError(err as Error)
+      setError(new Error(`Unable to load agent activity: ${errorMessage}. Please check your connection.`))
     } finally {
       setLoading(false)
     }
@@ -49,7 +50,7 @@ export const useRealtimeSubagentRuns = (projectId?: string) => {
           table: 'subagent_runs'
         },
         (payload) => {
-          console.log('Subagent run change received:', payload)
+          // Subagent run change received - updating state
           
           // Smooth animation trigger
           const event = new CustomEvent('data-update', { 

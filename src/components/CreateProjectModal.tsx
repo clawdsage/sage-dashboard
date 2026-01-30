@@ -188,24 +188,25 @@ const CreateProjectModal = ({ isOpen, onClose, onSuccess }: CreateProjectModalPr
       />
 
       {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
         <div 
-          className="relative w-full max-w-md transform overflow-hidden rounded-xl bg-background-card border border-slate-800 shadow-2xl transition-all"
+          className="relative w-full max-w-md transform overflow-hidden rounded-xl bg-background-card border border-slate-800 shadow-2xl transition-all mx-2 sm:mx-0"
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-title"
           aria-describedby="modal-description"
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-slate-800">
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-800">
             <div>
-              <h2 id="modal-title" className="text-xl font-semibold text-white">Create New Project</h2>
-              <p id="modal-description" className="text-sm text-slate-400 mt-1">Add a new project to your dashboard</p>
+              <h2 id="modal-title" className="text-lg sm:text-xl font-semibold text-white">Create New Project</h2>
+              <p id="modal-description" className="text-xs sm:text-sm text-slate-400 mt-1">Add a new project to your dashboard</p>
             </div>
             <button
               onClick={handleClose}
               disabled={isSubmitting}
-              className="p-2 text-slate-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 text-slate-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors active:bg-slate-800 rounded-lg"
               aria-label="Close modal"
             >
               <X className="w-5 h-5" />
@@ -213,7 +214,7 @@ const CreateProjectModal = ({ isOpen, onClose, onSuccess }: CreateProjectModalPr
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Project Name */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-2">
@@ -232,6 +233,8 @@ const CreateProjectModal = ({ isOpen, onClose, onSuccess }: CreateProjectModalPr
                 aria-required="true"
                 aria-invalid={!!errors.name}
                 aria-describedby={errors.name ? "name-error" : undefined}
+                inputMode="text"
+                enterKeyHint="next"
               />
               {errors.name && (
                 <p id="name-error" className="mt-2 text-sm text-red-400" role="alert">{errors.name}</p>
@@ -248,10 +251,12 @@ const CreateProjectModal = ({ isOpen, onClose, onSuccess }: CreateProjectModalPr
                 name="description"
                 value={formData.description || ''}
                 onChange={handleInputChange}
-                className="input-field w-full min-h-[100px] resize-none"
+                className="input-field w-full min-h-[80px] sm:min-h-[100px] resize-none"
                 placeholder="Describe the project goals and requirements..."
                 disabled={isSubmitting}
-                rows={3}
+                rows={2}
+                inputMode="text"
+                enterKeyHint="next"
               />
               {errors.description && (
                 <p className="mt-2 text-sm text-red-400">{errors.description}</p>
@@ -303,25 +308,25 @@ const CreateProjectModal = ({ isOpen, onClose, onSuccess }: CreateProjectModalPr
 
             {/* Submit Error */}
             {submitError && (
-              <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+              <div className="p-3 sm:p-4 rounded-lg bg-red-500/10 border border-red-500/20">
                 <p className="text-sm text-red-400">{submitError}</p>
               </div>
             )}
 
             {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 border-t border-slate-800">
               <button
                 type="button"
                 onClick={handleClose}
                 disabled={isSubmitting}
-                className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-3 sm:py-2 text-sm font-medium text-slate-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors active:bg-slate-800 rounded-lg"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed py-3 sm:py-2"
               >
                 {isSubmitting ? (
                   <>

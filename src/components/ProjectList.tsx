@@ -90,21 +90,21 @@ const ProjectList = () => {
         {projects.map((project) => (
           <div
             key={project.id}
-            className="flex items-center justify-between p-4 rounded-lg hover:bg-slate-800/50 transition-all duration-300 group"
+            className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg hover:bg-slate-800/50 transition-all duration-300 group"
           >
-            <div className="flex items-center gap-4">
-              <div className="p-2 rounded-lg bg-slate-800">
+            <div className="flex items-start sm:items-center gap-4 mb-3 sm:mb-0">
+              <div className="p-2 rounded-lg bg-slate-800 flex-shrink-0">
                 {getStatusIcon(project.status)}
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-medium text-white">{project.name}</h3>
-                  <span className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(project.priority)}`}>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                  <h3 className="font-medium text-white truncate">{project.name}</h3>
+                  <span className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(project.priority)} self-start sm:self-center`}>
                     {project.priority}
                   </span>
                 </div>
-                <p className="text-sm text-slate-400 mt-1">{project.description}</p>
-                <div className="flex items-center gap-4 mt-2">
+                <p className="text-sm text-slate-400 mb-3 sm:mb-2 line-clamp-2">{project.description}</p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <span className="text-xs text-slate-500">
                     Updated {new Date(project.updated_at).toLocaleDateString()}
                   </span>
@@ -116,12 +116,12 @@ const ProjectList = () => {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between sm:justify-end gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-700">
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 rounded-full bg-green-500"></div>
                 <span className="text-xs text-slate-400">Active</span>
               </div>
-              <button className="p-1 text-slate-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
+              <button className="p-2 text-slate-400 hover:text-white active:bg-slate-700 rounded-lg transition-colors sm:opacity-0 sm:group-hover:opacity-100">
                 <MoreVertical className="w-4 h-4" />
               </button>
             </div>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sage Dashboard Mobile Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .mobile-test-container {
+            max-width: 100%;
+            padding: 20px;
+        }
+        
+        .viewport {
+            border: 2px solid #3a9d3a;
+            border-radius: 12px;
+            margin: 20px 0;
+            padding: 10px;
+            background: #1e293b;
+        }
+        
+        .viewport-title {
+            color: #3a9d3a;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .test-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .sidebar-sim {
+            width: 256px;
+            background: #1a2438;
+            border-right: 1px solid #334155;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            background: #1e293b;
+            border-radius: 8px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #334155;
+            padding: 16px;
+            border-radius: 8px;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        
+        .project-list {
+            background: #334155;
+            padding: 16px;
+            border-radius: 8px;
+        }
+        
+        .activity-sidebar {
+            background: #334155;
+            padding: 16px;
+            border-radius: 8px;
+        }
+        
+        /* Mobile viewport simulations */
+        .viewport-375 {
+            width: 375px;
+            height: 667px;
+            overflow: auto;
+        }
+        
+        .viewport-414 {
+            width: 414px;
+            height: 896px;
+            overflow: auto;
+        }
+        
+        .viewport-768 {
+            width: 768px;
+            height: 1024px;
+            overflow: auto;
+        }
+        
+        .issue {
+            background: #dc2626;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .fix {
+            background: #059669;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .note {
+            background: #d97706;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-test-container">
+        <h1>Sage Dashboard Mobile Responsiveness Test</h1>
+        <p>Testing current layout at different viewport sizes</p>
+        
+        <div class="viewport viewport-375">
+            <div class="viewport-title">iPhone SE/8 (375px)</div>
+            <div class="test-content">
+                <div class="sidebar-sim">
+                    <div class="issue">❌ Sidebar takes full width - needs hamburger menu</div>
+                </div>
+                <div class="main-content">
+                    <div class="stats-grid">
+                        <div class="issue">❌ 4-column grid collapses poorly</div>
+                        <div class="stat-card">Stat 1</div>
+                        <div class="stat-card">Stat 2</div>
+                        <div class="stat-card">Stat 3</div>
+                        <div class="stat-card">Stat 4</div>
+                    </div>
+                    <div class="content-grid">
+                        <div class="project-list">
+                            <div class="issue">❌ 2-column layout doesn't stack</div>
+                        </div>
+                        <div class="activity-sidebar">
+                            <div class="issue">❌ Sidebar content should move below</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="viewport viewport-414">
+            <div class="viewport-title">iPhone 12/13/14 (414px)</div>
+            <div class="test-content">
+                <div class="sidebar-sim">
+                    <div class="issue">❌ Sidebar still too wide</div>
+                </div>
+                <div class="main-content">
+                    <div class="stats-grid">
+                        <div class="note">⚠️ 4-column grid might work as 2x2</div>
+                    </div>
+                    <div class="content-grid">
+                        <div class="note">⚠️ 2-column layout needs adjustment</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="viewport viewport-768">
+            <div class="viewport-title">iPad Mini (768px)</div>
+            <div class="test-content">
+                <div class="sidebar-sim">
+                    <div class="fix">✅ Sidebar might work at this width</div>
+                </div>
+                <div class="main-content">
+                    <div class="stats-grid">
+                        <div class="fix">✅ 4-column grid should work</div>
+                    </div>
+                    <div class="content-grid">
+                        <div class="fix">✅ 2-column layout should work</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="issues-summary">
+            <h2>Key Issues Identified:</h2>
+            <ol>
+                <li class="issue">Fixed sidebar width (256px) doesn't collapse on mobile</li>
+                <li class="issue">4-column stats grid needs responsive breakpoints</li>
+                <li class="issue">2-column content layout needs to stack vertically</li>
+                <li class="issue">Tables need mobile-friendly presentation</li>
+                <li class="issue">Modals need to fit small screens</li>
+                <li class="issue">Touch targets need to be larger (min 44x44px)</li>
+                <li class="issue">Form inputs need mobile keyboard optimization</li>
+            </ol>
+            
+            <h2>Proposed Solutions:</h2>
+            <ol>
+                <li class="fix">Add hamburger menu for sidebar on mobile</li>
+                <li class="fix">Use responsive grid classes (grid-cols-1 md:grid-cols-2 lg:grid-cols-4)</li>
+                <li class="fix">Stack content vertically on mobile (flex-col md:flex-row)</li>
+                <li class="fix">Convert tables to card-based layouts on mobile</li>
+                <li class="fix">Make modals full-screen or adjust padding on mobile</li>
+                <li class="fix">Increase button/icon sizes and add touch feedback</li>
+                <li class="fix">Add inputmode attributes for mobile keyboards</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

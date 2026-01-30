@@ -69,6 +69,49 @@
   .animate-scale-up {
     animation: scale-up 0.2s ease-out;
   }
+
+  .animate-slide-up {
+    animation: slide-up 0.4s ease-out;
+  }
+
+  .animate-pulse-active {
+    animation: pulse-active 1.5s ease-in-out infinite;
+  }
+
+  .animate-ripple {
+    animation: ripple 0.6s linear;
+  }
+
+  .animate-heartbeat {
+    animation: heartbeat 1.2s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-confetti-fall {
+    animation: confetti-fall 5s linear forwards;
+  }
+
+  .animate-sparkle {
+    animation: sparkle 1.5s ease-out;
+  }
+
+  .animate-gradient-shift {
+    animation: gradient-shift 3s ease infinite;
+    background-size: 200% 200%;
+  }
+
+  .animate-progress-glow {
+    animation: progress-glow 2s ease-in-out infinite;
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, #1e293b 25%, #2d3748 50%, #1e293b 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+  }
 }
 
 @keyframes pulse-glow {
@@ -107,4 +150,93 @@
   to {
     transform: scale(1);
   }
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Enhanced card styles with depth */
+.card {
+  @apply bg-background-card rounded-xl border border-slate-700 p-6 shadow-lg transition-all duration-300;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(58, 157, 58, 0.3), transparent);
+}
+
+.card:hover {
+  @apply border-primary/30 shadow-xl;
+  transform: translateY(-2px);
+}
+
+/* Gradient backgrounds */
+.bg-gradient-sage {
+  background: linear-gradient(135deg, #3a9d3a 0%, #56b856 50%, #2d7d2d 100%);
+}
+
+.bg-gradient-card {
+  background: linear-gradient(135deg, #1e293b 0%, #2d3748 100%);
+}
+
+.bg-gradient-progress {
+  background: linear-gradient(90deg, #3a9d3a 0%, #56b856 50%, #3a9d3a 100%);
+  background-size: 200% 100%;
+}
+
+/* Particle container */
+.particle-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Ripple effect */
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(58, 157, 58, 0.3) 0%, transparent 70%);
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+}
+
+/* Connection lines */
+.connection-line {
+  position: absolute;
+  background: linear-gradient(90deg, rgba(58, 157, 58, 0.3), rgba(58, 157, 58, 0.1));
+  height: 2px;
+  transform-origin: left center;
+}
+
+/* Activity heatmap */
+.activity-heatmap {
+  display: grid;
+  gap: 2px;
+}
+
+.heatmap-cell {
+  @apply rounded-sm;
+  transition: all 0.3s ease;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.2);
+  z-index: 2;
 }

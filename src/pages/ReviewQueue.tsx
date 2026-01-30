@@ -242,47 +242,47 @@ const ReviewQueue = () => {
       )}
 
       {/* Review Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {subagentRuns.map((run) => (
           <div
             key={run.id}
             className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden"
           >
             {/* Card Header */}
-            <div className="p-6 border-b border-slate-700">
+            <div className="p-4 lg:p-6 border-b border-slate-700">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                      <User className="w-5 h-5 text-primary" />
+                  <div className="flex items-start lg:items-center gap-3 mb-2">
+                    <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 lg:w-5 lg:h-5 text-primary" />
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-white">{run.name}</h3>
-                      <p className="text-sm text-slate-400">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base lg:text-lg font-semibold text-white truncate">{run.name}</h3>
+                      <p className="text-xs lg:text-sm text-slate-400 line-clamp-2">
                         {run.task_description || 'No description provided'}
                       </p>
                     </div>
                   </div>
                   
                   {/* Metadata */}
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Calendar className="w-4 h-4 text-slate-400" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 mt-4">
+                    <div className="flex items-center gap-2 text-xs lg:text-sm">
+                      <Calendar className="w-4 h-4 text-slate-400 flex-shrink-0" />
                       <span className="text-slate-300">Completed:</span>
-                      <span className="text-white">{formatDate(run.completed_at)}</span>
+                      <span className="text-white truncate">{formatDate(run.completed_at)}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <DollarSign className="w-4 h-4 text-slate-400" />
+                    <div className="flex items-center gap-2 text-xs lg:text-sm">
+                      <DollarSign className="w-4 h-4 text-slate-400 flex-shrink-0" />
                       <span className="text-slate-300">Cost:</span>
                       <span className="text-white">{formatCost(run.cost)}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Hash className="w-4 h-4 text-slate-400" />
+                    <div className="flex items-center gap-2 text-xs lg:text-sm">
+                      <Hash className="w-4 h-4 text-slate-400 flex-shrink-0" />
                       <span className="text-slate-300">Tokens:</span>
                       <span className="text-white">{run.tokens_used.toLocaleString()}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="w-4 h-4 text-slate-400" />
+                    <div className="flex items-center gap-2 text-xs lg:text-sm">
+                      <Clock className="w-4 h-4 text-slate-400 flex-shrink-0" />
                       <span className="text-slate-300">API Calls:</span>
                       <span className="text-white">{run.api_calls}</span>
                     </div>
@@ -292,15 +292,15 @@ const ReviewQueue = () => {
             </div>
 
             {/* Output Preview */}
-            <div className="p-6 border-b border-slate-700">
-              <h4 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-3">
+            <div className="p-4 lg:p-6 border-b border-slate-700">
+              <h4 className="text-xs lg:text-sm font-semibold text-slate-300 uppercase tracking-wider mb-3">
                 Output
               </h4>
-              <div className="bg-slate-900 rounded-lg p-4 max-h-60 overflow-y-auto">
+              <div className="bg-slate-900 rounded-lg p-3 lg:p-4 max-h-48 lg:max-h-60 overflow-y-auto">
                 {run.output ? (
-                  <pre className="text-sm text-slate-300 whitespace-pre-wrap font-mono">
-                    {run.output.length > 1000 
-                      ? `${run.output.substring(0, 1000)}...` 
+                  <pre className="text-xs lg:text-sm text-slate-300 whitespace-pre-wrap font-mono leading-relaxed">
+                    {run.output.length > 800 
+                      ? `${run.output.substring(0, 800)}...` 
                       : run.output}
                   </pre>
                 ) : (
@@ -310,7 +310,7 @@ const ReviewQueue = () => {
             </div>
 
             {/* Actions */}
-            <div className="p-6">
+            <div className="p-4 lg:p-6">
               <div className="space-y-4">
                 {/* Comment Input */}
                 <div>
@@ -325,8 +325,10 @@ const ReviewQueue = () => {
                       [run.id]: e.target.value
                     }))}
                     placeholder="Add feedback for the sub-agent..."
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none text-sm"
                     rows={2}
+                    inputMode="text"
+                    enterKeyHint="done"
                   />
                 </div>
 
@@ -335,40 +337,40 @@ const ReviewQueue = () => {
                   <button
                     onClick={() => handleReviewAction(run.id, 'approve', commentInputs[run.id])}
                     disabled={updatingId === run.id}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
                   >
                     {updatingId === run.id ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <CheckCircle className="w-4 h-4" />
                     )}
-                    Approve
+                    <span className="truncate">Approve</span>
                   </button>
                   
                   <button
                     onClick={() => handleReviewAction(run.id, 'request_changes', commentInputs[run.id])}
                     disabled={updatingId === run.id}
-                    className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
                   >
                     {updatingId === run.id ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <RefreshCw className="w-4 h-4" />
                     )}
-                    Request Changes
+                    <span className="truncate">Request Changes</span>
                   </button>
                   
                   <button
                     onClick={() => handleReviewAction(run.id, 'reject', commentInputs[run.id])}
                     disabled={updatingId === run.id}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
                   >
                     {updatingId === run.id ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <XCircle className="w-4 h-4" />
                     )}
-                    Reject
+                    <span className="truncate">Reject</span>
                   </button>
                 </div>
               </div>

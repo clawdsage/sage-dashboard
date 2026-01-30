@@ -101,7 +101,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         {stats.map((stat, index) => (
           <StatCard key={index} {...stat} />
         ))}
@@ -112,8 +112,8 @@ const Dashboard = () => {
         {/* Projects */}
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-white">Recent Projects</h2>
-            <button className="text-primary hover:text-primary-light text-sm font-medium transition-colors">
+            <h2 className="text-lg lg:text-xl font-semibold text-white">Recent Projects</h2>
+            <button className="text-primary hover:text-primary-light text-sm font-medium transition-colors active:scale-95">
               View all →
             </button>
           </div>
@@ -122,7 +122,7 @@ const Dashboard = () => {
 
         {/* Recent Activity */}
         <div>
-          <h2 className="text-xl font-semibold text-white mb-4">Recent Activity</h2>
+          <h2 className="text-lg lg:text-xl font-semibold text-white mb-4">Recent Activity</h2>
           <RecentActivity />
         </div>
       </div>

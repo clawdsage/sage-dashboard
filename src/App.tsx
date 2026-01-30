@@ -11,6 +11,8 @@ const ProjectDetail = lazy(() => import('./pages/ProjectDetail'))
 const ReviewQueue = lazy(() => import('./pages/ReviewQueue'))
 const Agents = lazy(() => import('./pages/Agents'))
 const Activity = lazy(() => import('./pages/Activity'))
+const Analytics = lazy(() => import('./pages/Analytics'))
+const Settings = lazy(() => import('./pages/Settings'))
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -35,6 +37,8 @@ function App() {
             <Route path="agents" element={<Agents />} />
             <Route path="review" element={<ReviewQueue />} />
             <Route path="activity" element={<Activity />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
       </Suspense>

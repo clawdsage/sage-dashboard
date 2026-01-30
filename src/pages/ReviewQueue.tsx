@@ -30,11 +30,11 @@ const ReviewQueue = () => {
   const fetchReviewQueue = async () => {
     try {
       setLoading(true)
+      // Fetch: completed agents needing review OR failed/error agents needing triage
       const { data, error } = await supabase
         .from('subagent_runs')
         .select('*')
-        .eq('status', 'completed')
-        .eq('review_status', 'pending')
+        .or('review_status.eq.pending,status.eq.error,status.eq.failed')
         .order('completed_at', { ascending: false })
 
       if (error) throw error
@@ -49,9 +49,12 @@ const ReviewQueue = () => {
     }
   }
 
-  // Set up realtime subscription
+  // Set up realtime subscription and auto-refresh
   useEffect(() => {
     fetchReviewQueue()
+    
+    // Auto-refresh every 15 seconds
+    const refreshInterval = setInterval(fetchReviewQueue, 15000)
 
     const channel = supabase
       .channel('review-queue-changes')
@@ -60,8 +63,7 @@ const ReviewQueue = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'subagent_runs',
-          filter: 'status=eq.completed'
+          table: 'subagent_runs'
         },
         (payload) => {
           // Review queue change received - updating state
@@ -69,18 +71,21 @@ const ReviewQueue = () => {
           // Update local state based on event type
           switch (payload.eventType) {
             case 'INSERT':
-              if (payload.new.review_status === 'pending') {
-                setSubagentRuns(prev => [payload.new as SubagentRun, ...prev])
+              const newRun = payload.new as SubagentRun
+              if (newRun.review_status === 'pending' || newRun.status === 'error' || newRun.status === 'failed') {
+                setSubagentRuns(prev => [newRun, ...prev])
               }
               break
             case 'UPDATE':
               setSubagentRuns(prev => {
                 const updatedRun = payload.new as SubagentRun
-                // Remove if no longer pending review
-                if (updatedRun.review_status !== 'pending') {
+                // Remove if no longer needs review
+                if (updatedRun.review_status !== 'pending' && 
+                    updatedRun.status !== 'error' && 
+                    updatedRun.status !== 'failed') {
                   return prev.filter(run => run.id !== updatedRun.id)
                 }
-                // Update if still pending
+                // Update if still needs review
                 return prev.map(run => 
                   run.id === updatedRun.id ? updatedRun : run
                 )
@@ -97,6 +102,7 @@ const ReviewQueue = () => {
       .subscribe()
 
     return () => {
+      clearInterval(refreshInterval)
       supabase.removeChannel(channel)
     }
   }, [])

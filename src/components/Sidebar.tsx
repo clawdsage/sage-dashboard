@@ -2,7 +2,6 @@ import { NavLink } from 'react-router-dom'
 import { 
   Home, 
   FolderKanban, 
-  Users, 
   BarChart3, 
   Settings,
   Bot,
@@ -27,7 +26,6 @@ const Sidebar = () => {
     },
     { to: '/activity', icon: Clock, label: 'Activity' },
     { to: '/analytics', icon: BarChart3, label: 'Analytics' },
-    { to: '/team', icon: Users, label: 'Team' },
     { to: '/settings', icon: Settings, label: 'Settings' },
   ]
 

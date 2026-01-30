@@ -17,21 +17,21 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-background flex items-center justify-center p-3 sm:p-4">
+      <div className="w-full max-w-md mx-2 sm:mx-0">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/20 mb-4">
-            <Bot className="w-8 h-8 text-primary" />
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-primary/20 mb-3 sm:mb-4">
+            <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-white">Sage Dashboard</h1>
-          <p className="text-slate-400 mt-2">AI Sub-agent Management Platform</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Sage Dashboard</h1>
+          <p className="text-sm sm:text-base text-slate-400 mt-1 sm:mt-2">AI Sub-agent Management Platform</p>
         </div>
 
         {/* Login Card */}
         <div className="card">
-          <h2 className="text-2xl font-bold text-white mb-2">Welcome back</h2>
-          <p className="text-slate-400 mb-6">Sign in to your account to continue</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Welcome back</h2>
+          <p className="text-sm sm:text-base text-slate-400 mb-4 sm:mb-6">Sign in to your account to continue</p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}

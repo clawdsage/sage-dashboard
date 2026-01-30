@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Sidebar from './Sidebar'
 import Header from './Header'
+import MobileBottomNav from './MobileBottomNav'
 import CreateProjectModal from './CreateProjectModal'
 import NotificationProvider from './Notification'
 import { Menu, X } from 'lucide-react'
@@ -58,18 +59,21 @@ const Layout = () => {
         {/* Mobile sidebar toggle button */}
         <button
           onClick={toggleSidebar}
-          className="lg:hidden fixed top-4 left-4 z-40 p-2 rounded-lg bg-background-card border border-slate-700 text-white"
+          className="lg:hidden fixed top-4 left-4 z-40 p-2 rounded-lg bg-background-card border border-slate-700 text-white touch-button"
           aria-label="Toggle sidebar"
         >
           {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
 
         <Header onNewProjectClick={handleNewProjectClick} />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-20 lg:pb-6">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>
         </main>
+        
+        {/* Mobile Bottom Navigation */}
+        <MobileBottomNav />
       </div>
 
       {/* Create Project Modal */}

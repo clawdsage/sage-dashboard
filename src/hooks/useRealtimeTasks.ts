@@ -49,7 +49,7 @@ export const useRealtimeTasks = (projectId?: string) => {
           table: 'tasks'
         },
         (payload) => {
-          console.log('Task change received:', payload)
+          // Task change received - updating state
           
           // Smooth animation trigger
           const event = new CustomEvent('data-update', { 

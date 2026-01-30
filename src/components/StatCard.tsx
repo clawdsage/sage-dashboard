@@ -84,28 +84,28 @@ const StatCard = ({ title, value, change, icon: Icon, color, trend, animate = tr
       </div>
 
       <div className="flex items-center justify-between relative z-10">
-        <div>
-          <p className="text-sm text-slate-400 animate-fade-in">{title}</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs sm:text-sm text-slate-400 animate-fade-in truncate">{title}</p>
           <p 
             ref={valueRef}
-            className="text-2xl font-bold text-white mt-2 transition-all duration-300"
+            className="text-xl sm:text-2xl font-bold text-white mt-1 sm:mt-2 transition-all duration-300 truncate"
           >
             {value}
           </p>
-          <div className="flex items-center gap-1 mt-2">
-            <span className={`text-sm font-medium animate-slide-up ${
+          <div className="flex items-center gap-1 mt-1 sm:mt-2 flex-wrap">
+            <span className={`text-xs sm:text-sm font-medium animate-slide-up ${
               trend === 'up' ? 'text-green-500' : 'text-red-500'
             }`}>
               {trend === 'up' ? '↗' : '↘'} {change}
             </span>
-            <span className="text-sm text-slate-400 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <span className="text-xs sm:text-sm text-slate-400 animate-fade-in" style={{ animationDelay: '0.1s' }}>
               from yesterday
             </span>
           </div>
         </div>
         <div 
           ref={iconRef}
-          className={`relative ${color} w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
+          className={`relative ${color} w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 flex-shrink-0 ml-3 ${
             isAnimating ? 'animate-pulse-glow' : ''
           }`}
         >

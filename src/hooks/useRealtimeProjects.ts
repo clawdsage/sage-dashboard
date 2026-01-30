@@ -43,7 +43,7 @@ export const useRealtimeProjects = () => {
           table: 'projects'
         },
         (payload) => {
-          console.log('Project change received:', payload)
+          // Project change received - updating state
           
           // Smooth animation trigger
           const event = new CustomEvent('data-update', { 

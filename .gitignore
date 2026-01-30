@@ -30,3 +30,8 @@ dist-ssr
 
 # TypeScript cache
 *.tsbuildinfo
+
+# Test files with environment variables
+test-realtime.mjs
+add-sample-data.js
+verify-setup.js

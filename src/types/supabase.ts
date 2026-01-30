@@ -85,7 +85,7 @@ export interface Database {
           project_id: string | null
           task_id: string | null
           name: string
-          status: 'idle' | 'active' | 'completed' | 'error'
+          status: 'idle' | 'active' | 'completed' | 'error' | 'failed'
           task_description: string | null
           progress: number
           started_at: string
@@ -105,7 +105,7 @@ export interface Database {
           project_id?: string | null
           task_id?: string | null
           name: string
-          status?: 'idle' | 'active' | 'completed' | 'error'
+          status?: 'idle' | 'active' | 'completed' | 'error' | 'failed'
           task_description?: string | null
           progress?: number
           started_at?: string
@@ -125,7 +125,7 @@ export interface Database {
           project_id?: string | null
           task_id?: string | null
           name?: string
-          status?: 'idle' | 'active' | 'completed' | 'error'
+          status?: 'idle' | 'active' | 'completed' | 'error' | 'failed'
           task_description?: string | null
           progress?: number
           started_at?: string

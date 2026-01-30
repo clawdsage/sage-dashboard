@@ -8,6 +8,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Login = lazy(() => import('./pages/Login'))
 const ProjectDetail = lazy(() => import('./pages/ProjectDetail'))
 const ReviewQueue = lazy(() => import('./pages/ReviewQueue'))
+const Agents = lazy(() => import('./pages/Agents'))
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -28,6 +29,7 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="project/:id" element={<ProjectDetail />} />
+            <Route path="agents" element={<Agents />} />
             <Route path="review" element={<ReviewQueue />} />
           </Route>
         </Routes>

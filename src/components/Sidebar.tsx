@@ -7,14 +7,24 @@ import {
   Settings,
   Bot,
   Clock,
-  CheckCircle
+  CheckCircle,
+  ClipboardCheck
 } from 'lucide-react'
+import { usePendingReviewCount } from '../hooks'
 
 const Sidebar = () => {
+  const { count: pendingReviewCount } = usePendingReviewCount()
+  
   const navItems = [
     { to: '/', icon: Home, label: 'Dashboard' },
     { to: '/projects', icon: FolderKanban, label: 'Projects' },
     { to: '/agents', icon: Bot, label: 'Sub-agents' },
+    { 
+      to: '/review', 
+      icon: ClipboardCheck, 
+      label: 'Review Queue',
+      badge: pendingReviewCount > 0 ? pendingReviewCount : undefined
+    },
     { to: '/activity', icon: Clock, label: 'Activity' },
     { to: '/analytics', icon: BarChart3, label: 'Analytics' },
     { to: '/team', icon: Users, label: 'Team' },
@@ -54,7 +64,12 @@ const Sidebar = () => {
               }
             >
               <item.icon className="w-5 h-5" />
-              <span>{item.label}</span>
+              <span className="flex-1">{item.label}</span>
+              {item.badge !== undefined && (
+                <span className="px-2 py-1 text-xs font-semibold bg-primary text-white rounded-full min-w-6 flex items-center justify-center">
+                  {item.badge > 99 ? '99+' : item.badge}
+                </span>
+              )}
             </NavLink>
           ))}
         </div>

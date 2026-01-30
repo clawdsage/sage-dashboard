@@ -94,6 +94,11 @@ export interface Database {
           tokens_used: number
           api_calls: number
           cost: number
+          review_status: 'pending' | 'approved' | 'changes_requested' | 'rejected'
+          output: string | null
+          review_comment: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
         }
         Insert: {
           id?: string
@@ -109,6 +114,11 @@ export interface Database {
           tokens_used?: number
           api_calls?: number
           cost?: number
+          review_status?: 'pending' | 'approved' | 'changes_requested' | 'rejected'
+          output?: string | null
+          review_comment?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
         }
         Update: {
           id?: string
@@ -124,12 +134,17 @@ export interface Database {
           tokens_used?: number
           api_calls?: number
           cost?: number
+          review_status?: 'pending' | 'approved' | 'changes_requested' | 'rejected'
+          output?: string | null
+          review_comment?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
         }
       }
       activity_log: {
         Row: {
           id: string
-          type: 'agent_started' | 'agent_completed' | 'project_created' | 'task_created' | 'task_completed' | 'error'
+          type: 'agent_started' | 'agent_completed' | 'project_created' | 'task_created' | 'task_completed' | 'error' | 'review_approved' | 'review_rejected' | 'review_changes_requested'
           message: string
           project_id: string | null
           task_id: string | null
@@ -138,7 +153,7 @@ export interface Database {
         }
         Insert: {
           id?: string
-          type: 'agent_started' | 'agent_completed' | 'project_created' | 'task_created' | 'task_completed' | 'error'
+          type: 'agent_started' | 'agent_completed' | 'project_created' | 'task_created' | 'task_completed' | 'error' | 'review_approved' | 'review_rejected' | 'review_changes_requested'
           message: string
           project_id?: string | null
           task_id?: string | null
@@ -147,7 +162,7 @@ export interface Database {
         }
         Update: {
           id?: string
-          type?: 'agent_started' | 'agent_completed' | 'project_created' | 'task_created' | 'task_completed' | 'error'
+          type?: 'agent_started' | 'agent_completed' | 'project_created' | 'task_created' | 'task_completed' | 'error' | 'review_approved' | 'review_rejected' | 'review_changes_requested'
           message?: string
           project_id?: string | null
           task_id?: string | null

@@ -122,16 +122,6 @@ const Agents = () => {
     }
   }
 
-  const getProjectStatusColor = (status: string) => {
-    switch (status) {
-      case 'planning': return 'bg-blue-500/20 text-blue-400'
-      case 'in-progress': return 'bg-green-500/20 text-green-400'
-      case 'review': return 'bg-yellow-500/20 text-yellow-400'
-      case 'completed': return 'bg-purple-500/20 text-purple-400'
-      default: return 'bg-slate-500/20 text-slate-400'
-    }
-  }
-
   // Calculate uptime from started_at and completed_at
   const calculateUptime = (startedAt: string, completedAt: string | null) => {
     const start = new Date(startedAt)
@@ -206,64 +196,23 @@ const Agents = () => {
     )
   }
 
-  // Filter agents by project
-  const [selectedProject, setSelectedProject] = useState<string>('all')
-  
-  const filteredAgents = selectedProject === 'all' 
-    ? agents 
-    : agents.filter(agent => 
-        selectedProject === 'general' 
-          ? !agent.project_id 
-          : agent.project_id === selectedProject
-      )
-
-  // Calculate stats from filtered data
-  const activeAgents = filteredAgents.filter(a => a.status === 'active').length
-  const totalTasks = filteredAgents.filter(a => a.status === 'completed').length
-  const totalCost = filteredAgents.reduce((sum, agent) => sum + (agent.cost || 0), 0)
-  const avgCpu = filteredAgents.length > 0 
-    ? Math.round(filteredAgents.reduce((sum, agent) => sum + calculateCpu(agent.status, agent.progress), 0) / filteredAgents.length)
+  // Calculate stats from real data
+  const activeAgents = agents.filter(a => a.status === 'active').length
+  const totalTasks = agents.filter(a => a.status === 'completed').length
+  const totalCost = agents.reduce((sum, agent) => sum + (agent.cost || 0), 0)
+  const avgCpu = agents.length > 0 
+    ? Math.round(agents.reduce((sum, agent) => sum + calculateCpu(agent.status, agent.progress), 0) / agents.length)
     : 0
-
-  // Get unique projects for filter dropdown
-  const projectOptions = [
-    { id: 'all', name: 'All Projects' },
-    { id: 'general', name: 'General (No Project)' },
-    ...Object.values(projects).map(project => ({
-      id: project.id,
-      name: project.name
-    }))
-  ]
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white">Sub-agents</h1>
           <p className="text-slate-400 mt-2">Manage and monitor your AI sub-agents</p>
         </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          {/* Project Filter */}
-          <div className="relative">
-            <select
-              value={selectedProject}
-              onChange={(e) => setSelectedProject(e.target.value)}
-              className="appearance-none bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 pr-8 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            >
-              {projectOptions.map(option => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
-              <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-              </svg>
-            </div>
-          </div>
-          
+        <div className="flex items-center gap-3">
           <button className="btn-primary flex items-center gap-2">
             <Bot className="w-4 h-4" />
             Deploy Agent
@@ -344,40 +293,12 @@ const Agents = () => {
 
       {/* Agents Table */}
       <div className="card">
-        <div className="flex items-center justify-between mb-4 px-4 pt-4">
-          <div className="text-sm text-slate-400">
-            Showing <span className="font-medium text-white">{filteredAgents.length}</span> of{' '}
-            <span className="font-medium text-white">{agents.length}</span> agents
-            {selectedProject !== 'all' && (
-              <span className="ml-2">
-                (filtered by {selectedProject === 'general' ? 'General' : projects[selectedProject]?.name || 'project'})
-              </span>
-            )}
-          </div>
-          {selectedProject !== 'all' && (
-            <button
-              onClick={() => setSelectedProject('all')}
-              className="text-sm text-primary hover:text-primary/80 transition-colors"
-            >
-              Clear filter
-            </button>
-          )}
-        </div>
-        
-        {filteredAgents.length === 0 ? (
+        {agents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Bot className="w-16 h-16 text-slate-600 mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">
-              {selectedProject === 'all' 
-                ? 'No agents running' 
-                : selectedProject === 'general'
-                ? 'No agents running without project assignment'
-                : 'No agents running for this project'}
-            </h3>
+            <h3 className="text-xl font-semibold text-white mb-2">No agents running</h3>
             <p className="text-slate-400 max-w-md mb-6">
-              {selectedProject === 'all' 
-                ? 'Deploy your first AI sub-agent to start automating tasks and workflows.'
-                : 'Try selecting "All Projects" or deploy a new agent for this project.'}
+              Deploy your first AI sub-agent to start automating tasks and workflows.
             </p>
             <button className="btn-primary flex items-center gap-2">
               <Bot className="w-4 h-4" />
@@ -401,13 +322,12 @@ const Agents = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredAgents.map((agent) => {
+                {agents.map((agent) => {
                   const agentType = getTypeFromTask(agent.task_description)
                   const cpuUsage = calculateCpu(agent.status, agent.progress)
                   const memoryUsage = calculateMemory(agent.tokens_used || 0)
                   const uptime = calculateUptime(agent.started_at, agent.completed_at)
                   const tasksCompleted = calculateTasks(agent.status)
-                  const project = agent.project_id ? projects[agent.project_id] : null
                   
                   return (
                     <tr key={agent.id} className="border-b border-slate-800/50 last:border-0 hover:bg-slate-800/30">
@@ -423,41 +343,6 @@ const Agents = () => {
                             </div>
                           </div>
                         </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        {project ? (
-                          <Link 
-                            to={`/project/${project.id}`}
-                            className="group block"
-                          >
-                            <div className="flex items-center gap-2 text-sm">
-                              <Folder className="w-4 h-4 text-slate-400 group-hover:text-primary transition-colors" />
-                              <div>
-                                <div className="font-medium text-white group-hover:text-primary transition-colors">
-                                  {project.name}
-                                </div>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <span className={`text-xs px-2 py-0.5 rounded-full ${getProjectStatusColor(project.status)}`}>
-                                    {project.status}
-                                  </span>
-                                  <span className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">
-                                    View project →
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </Link>
-                        ) : (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Folder className="w-4 h-4 text-slate-400" />
-                            <div>
-                              <div className="text-slate-300">General</div>
-                              <div className="text-xs text-slate-400 mt-1">
-                                No project assigned
-                              </div>
-                            </div>
-                          </div>
-                        )}
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex flex-col gap-1">

@@ -28,6 +28,9 @@ interface Project {
 const Agents = () => {
   const { subagentRuns: agents, loading, error, refetch, stats } = useRealtimeSubagentRuns()
   const [projects, setProjects] = useState<Record<string, Project>>({})
+  const [sortField, setSortField] = useState<string>('started_at')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
 
   // Fetch projects for agent runs
   useEffect(() => {
@@ -132,12 +135,63 @@ const Agents = () => {
     return status === 'completed' ? 1 : 0
   }
 
+  // Get sort indicator for a column
+  const getSortIndicator = (field: string) => {
+    if (sortField !== field) return null
+    return sortDirection === 'asc' ? '↑' : '↓'
+  }
+
   const toggleAgentStatus = (id: string) => {
     // In a real app, this would update the status in Supabase
     console.log('Toggle agent status for:', id)
     // For now, just refetch the data
     refetch()
   }
+
+  // Handle sorting
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDirection('desc')
+    }
+  }
+
+  // Filter and sort agents
+  const filteredAndSortedAgents = agents
+    .filter(agent => {
+      if (statusFilter === 'all') return true
+      return agent.status === statusFilter
+    })
+    .sort((a, b) => {
+      let aValue: any = a[sortField as keyof typeof a]
+      let bValue: any = b[sortField as keyof typeof b]
+
+      // Handle null values
+      if (aValue === null || aValue === undefined) aValue = ''
+      if (bValue === null || bValue === undefined) bValue = ''
+
+      // Handle dates
+      if (sortField.includes('_at')) {
+        aValue = new Date(aValue).getTime()
+        bValue = new Date(bValue).getTime()
+      }
+
+      // Handle numeric fields
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue
+      }
+
+      // Handle string fields
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortDirection === 'asc' 
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue)
+      }
+
+      return 0
+    })
 
   if (loading) {
     return (
@@ -265,7 +319,34 @@ const Agents = () => {
 
       {/* Agents Table */}
       <div className="card">
-        {agents.length === 0 ? (
+        {/* Status Filter */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-lg font-semibold text-white">Agent Runs</h3>
+            <p className="text-sm text-slate-400">
+              Showing {filteredAndSortedAgents.length} of {agents.length} agents
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-slate-400">Status:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+                <option value="failed">Failed</option>
+                <option value="idle">Idle</option>
+                <option value="error">Error</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        {filteredAndSortedAgents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Bot className="w-16 h-16 text-slate-600 mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">No agents running</h3>
@@ -282,17 +363,53 @@ const Agents = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-800">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-400">Agent</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-400">Project</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-400">Status</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-400">Resources</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-400">Uptime</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-400">Cost</th>
+                  <th 
+                    className="text-left py-3 px-4 text-sm font-semibold text-slate-400 cursor-pointer hover:text-white transition-colors"
+                    onClick={() => handleSort('name')}
+                  >
+                    Agent {getSortIndicator('name')}
+                  </th>
+                  <th 
+                    className="text-left py-3 px-4 text-sm font-semibold text-slate-400 cursor-pointer hover:text-white transition-colors"
+                    onClick={() => handleSort('model')}
+                  >
+                    Model {getSortIndicator('model')}
+                  </th>
+                  <th 
+                    className="text-left py-3 px-4 text-sm font-semibold text-slate-400 cursor-pointer hover:text-white transition-colors"
+                    onClick={() => handleSort('project_id')}
+                  >
+                    Project {getSortIndicator('project_id')}
+                  </th>
+                  <th 
+                    className="text-left py-3 px-4 text-sm font-semibold text-slate-400 cursor-pointer hover:text-white transition-colors"
+                    onClick={() => handleSort('status')}
+                  >
+                    Status {getSortIndicator('status')}
+                  </th>
+                  <th 
+                    className="text-left py-3 px-4 text-sm font-semibold text-slate-400 cursor-pointer hover:text-white transition-colors"
+                    onClick={() => handleSort('tokens_used')}
+                  >
+                    Resources {getSortIndicator('tokens_used')}
+                  </th>
+                  <th 
+                    className="text-left py-3 px-4 text-sm font-semibold text-slate-400 cursor-pointer hover:text-white transition-colors"
+                    onClick={() => handleSort('started_at')}
+                  >
+                    Started {getSortIndicator('started_at')}
+                  </th>
+                  <th 
+                    className="text-left py-3 px-4 text-sm font-semibold text-slate-400 cursor-pointer hover:text-white transition-colors"
+                    onClick={() => handleSort('cost')}
+                  >
+                    Cost {getSortIndicator('cost')}
+                  </th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-slate-400">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {agents.map((agent) => {
+                {filteredAndSortedAgents.map((agent) => {
                   const agentType = getTypeFromTask(agent.task_description)
                   const cpuUsage = calculateCpu(agent.status, agent.progress)
                   const memoryUsage = calculateMemory(agent.tokens_used || 0)
@@ -311,6 +428,16 @@ const Agents = () => {
                             <div className="text-xs text-slate-400 truncate max-w-[200px]" title={agent.task_description || 'No task description'}>
                               {agent.task_description || 'No task description'}
                             </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="text-sm">
+                          <div className="font-medium text-white truncate max-w-[180px]" title={agent.model || 'Unknown'}>
+                            {agent.model || 'Unknown'}
+                          </div>
+                          <div className="text-xs text-slate-400">
+                            {agent.tokens_used?.toLocaleString() || 0} tokens
                           </div>
                         </div>
                       </td>
@@ -352,31 +479,34 @@ const Agents = () => {
                             />
                           </div>
                           <div className="text-xs text-slate-400">{memoryUsage}GB RAM</div>
-                          {agent.tokens_used > 0 && (
-                            <div className="text-xs text-slate-400">
-                              {agent.tokens_used.toLocaleString()} tokens
-                            </div>
-                          )}
+                          <div className="text-xs text-slate-400">
+                            {agent.api_calls?.toLocaleString() || 0} API calls
+                          </div>
                         </div>
                       </td>
                       <td className="py-4 px-4">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Clock className="w-4 h-4 text-slate-400" />
-                          <span className="text-white">{uptime}</span>
-                        </div>
-                        <div className="text-xs text-slate-400 mt-1">
-                          Started: {new Date(agent.started_at).toLocaleDateString()}
+                        <div className="text-sm">
+                          <div className="font-medium text-white">
+                            {new Date(agent.started_at).toLocaleString('en-US', { 
+                              timeZone: 'America/New_York',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </div>
+                          <div className="text-xs text-slate-400 mt-1">
+                            {uptime} uptime
+                          </div>
                         </div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="text-sm font-medium text-white">
                           ${(agent.cost || 0).toFixed(2)}
                         </div>
-                        {agent.api_calls > 0 && (
-                          <div className="text-xs text-slate-400">
-                            {agent.api_calls} API calls
-                          </div>
-                        )}
+                        <div className="text-xs text-slate-400">
+                          ${((agent.cost || 0) / (agent.tokens_used || 1) * 1000).toFixed(4)}/1K tokens
+                        </div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2">

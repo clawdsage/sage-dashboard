@@ -7,7 +7,8 @@ import {
   Bot,
   Clock,
   CheckCircle,
-  ClipboardCheck
+  ClipboardCheck,
+  LayoutDashboard
 } from 'lucide-react'
 import { usePendingReviewCount } from '../hooks'
 
@@ -16,6 +17,7 @@ const Sidebar = () => {
   
   const navItems = [
     { to: '/', icon: Home, label: 'Dashboard' },
+    { to: '/dashboard-v2', icon: LayoutDashboard, label: 'Dashboard V2' },
     { to: '/projects', icon: FolderKanban, label: 'Projects' },
     { to: '/agents', icon: Bot, label: 'Sub-agents' },
     { 

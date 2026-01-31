@@ -313,11 +313,9 @@ const Agents = () => {
                   <th className="text-left py-3 px-4 text-sm font-semibold text-slate-400">Agent</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-slate-400">Project</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-slate-400">Status</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-400">Type</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-slate-400">Resources</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-slate-400">Uptime</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-slate-400">Cost</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-400">Tasks</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-slate-400">Actions</th>
                 </tr>
               </thead>
@@ -345,6 +343,19 @@ const Agents = () => {
                         </div>
                       </td>
                       <td className="py-4 px-4">
+                        {agent.project_id && projects[agent.project_id] ? (
+                          <Link 
+                            to={`/project/${agent.project_id}`}
+                            className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors"
+                          >
+                            <Folder className="w-4 h-4" />
+                            <span>{projects[agent.project_id].name}</span>
+                          </Link>
+                        ) : (
+                          <span className="text-sm text-slate-500">—</span>
+                        )}
+                      </td>
+                      <td className="py-4 px-4">
                         <div className="flex flex-col gap-1">
                           <span className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(agent.status)}`}>
                             {agent.status}
@@ -355,11 +366,6 @@ const Agents = () => {
                             </div>
                           )}
                         </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className={`text-xs px-2 py-1 rounded-full ${getTypeColor(agentType)}`}>
-                          {agentType}
-                        </span>
                       </td>
                       <td className="py-4 px-4">
                         <div className="space-y-1">
@@ -399,14 +405,6 @@ const Agents = () => {
                             {agent.api_calls} API calls
                           </div>
                         )}
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="text-sm font-medium text-white">
-                          {tasksCompleted}
-                        </div>
-                        <div className="text-xs text-slate-400">
-                          {agent.status === 'completed' ? 'Completed' : 'In progress'}
-                        </div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2">

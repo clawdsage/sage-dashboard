@@ -43,11 +43,9 @@ export const useActivityData = (
     totalTokens: 0
   })
 
-  // Store all runs and their transformed activities for incremental updates
+  // Store all runs and their transformed activities
   const allRunsRef = useRef<SubagentRun[]>([])
   const allActivitiesRef = useRef<ActivityEvent[]>([])
-  // Debounce timer for rapid updates
-  const updateTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Fetch projects for mapping project IDs to names
   const fetchProjects = useCallback(async () => {
@@ -228,79 +226,11 @@ export const useActivityData = (
     }
   }, [transformToActivityEvent, updateFilteredActivities])
 
-  // Handle realtime updates with debouncing
-  const handleRealtimeUpdate = useCallback((payload: any) => {
-    // Smooth animation trigger
-    const event = new CustomEvent('data-update', { 
-      detail: { table: 'subagent_runs', event: payload.eventType }
-    })
-    window.dispatchEvent(event)
-
-    switch (payload.eventType) {
-      case 'INSERT': {
-        const newRun = payload.new as SubagentRun
-        // Add to runs array
-        allRunsRef.current = [newRun, ...allRunsRef.current]
-        break
-      }
-      
-      case 'UPDATE': {
-        const updatedRun = payload.new as SubagentRun
-        // Update in runs array
-        allRunsRef.current = allRunsRef.current.map(run => 
-          run.id === updatedRun.id ? updatedRun : run
-        )
-        break
-      }
-      
-      case 'DELETE': {
-        const deletedRun = payload.old as SubagentRun
-        // Remove from runs array
-        allRunsRef.current = allRunsRef.current.filter(
-          run => run.id !== deletedRun.id
-        )
-        break
-      }
-    }
-    
-    // Re-transform all runs to activities
-    allActivitiesRef.current = allRunsRef.current.map(run => transformToActivityEvent(run))
-    
-    // Debounce the filtered activities update to prevent rapid re-renders
-    if (updateTimerRef.current) {
-      clearTimeout(updateTimerRef.current)
-    }
-    
-    updateTimerRef.current = setTimeout(() => {
-      updateFilteredActivities()
-    }, 100) // 100ms debounce
-  }, [transformToActivityEvent, updateFilteredActivities])
-
-  // Set up realtime subscription
+  // Load data on mount and when filters change
   useEffect(() => {
     fetchProjects()
     fetchActivityData()
-
-    const channel = supabase
-      .channel('activity-data-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'subagent_runs'
-        },
-        handleRealtimeUpdate
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-      if (updateTimerRef.current) {
-        clearTimeout(updateTimerRef.current)
-      }
-    }
-  }, [fetchProjects, fetchActivityData, handleRealtimeUpdate])
+  }, [fetchProjects, fetchActivityData])
 
   // Update when filters change
   useEffect(() => {

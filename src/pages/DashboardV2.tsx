@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useDashboardStore } from '../stores/dashboardStore';
+import ActivityTimeline from '../components/ActivityTimeline';
 
 const generateProgressBar = (progress: number): string => {
   const filled = Math.round((progress / 100) * 10);
@@ -9,7 +10,15 @@ const generateProgressBar = (progress: number): string => {
 };
 
 const DashboardV2: React.FC = () => {
-  const { agents, activities, stats, loadAgentsFromSupabase, subscribeToAgents } = useDashboardStore();
+  const { 
+    agents, 
+    activities, 
+    stats, 
+    loadAgentsFromSupabase, 
+    subscribeToAgents,
+    loadActivitiesFromSupabase,
+    subscribeToActivities 
+  } = useDashboardStore();
   const parentRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
@@ -21,9 +30,16 @@ const DashboardV2: React.FC = () => {
 
   useEffect(() => {
     loadAgentsFromSupabase();
-    const unsubscribe = subscribeToAgents();
-    return unsubscribe;
-  }, [loadAgentsFromSupabase, subscribeToAgents]);
+    loadActivitiesFromSupabase();
+    
+    const unsubscribeAgents = subscribeToAgents();
+    const unsubscribeActivities = subscribeToActivities();
+    
+    return () => {
+      unsubscribeAgents();
+      unsubscribeActivities();
+    };
+  }, [loadAgentsFromSupabase, subscribeToAgents, loadActivitiesFromSupabase, subscribeToActivities]);
 
   return (
     <div className="min-h-screen bg-slate-950 p-6">
@@ -128,32 +144,13 @@ const DashboardV2: React.FC = () => {
 
           {/* Activity Timeline (bottom-left, 25%) */}
           <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
-            <h2 className="text-xl font-semibold text-slate-100 mb-4">Recent Activity</h2>
-            <div className="space-y-4">
-              {activities.length > 0 ? (
-                activities.map((activity) => (
-                  <div key={activity.id} className="flex items-start space-x-3">
-                    <div className={`w-2 h-2 mt-2 rounded-full ${
-                      activity.type === 'completed' ? 'bg-green-500' :
-                      activity.type === 'failed' ? 'bg-red-500' :
-                      'bg-blue-500'
-                    }`} />
-                    <div className="flex-1">
-                      <div className="flex justify-between">
-                        <span className="font-medium text-slate-100">{activity.title}</span>
-                        <span className="text-sm text-slate-500">{activity.time}</span>
-                      </div>
-                      <p className="text-sm text-slate-400 mt-1">{activity.description}</p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <div className="text-slate-400">No recent activity</div>
-                  <div className="text-sm text-slate-500 mt-1">Activity will appear here</div>
-                </div>
-              )}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-slate-100">Activity Timeline</h2>
+              <span className="px-3 py-1 bg-slate-800 text-slate-400 rounded-full text-sm font-medium">
+                Last 10 events
+              </span>
             </div>
+            <ActivityTimeline activities={activities} />
           </div>
 
           {/* Right Column Container */}
@@ -209,7 +206,7 @@ const DashboardV2: React.FC = () => {
 
         {/* Footer Note */}
         <div className="mt-8 text-center text-sm text-slate-500">
-          Dashboard V2 • Real-time updates • Phase 1 Foundation
+          Dashboard V2 • Real-time updates • Phase 3 Activity Timeline Complete
         </div>
       </div>
     </div>

@@ -31,6 +31,44 @@ const mapSubagentRunToAgent = (run: SubagentRun): Agent => {
   };
 };
 
+const mapSubagentRunToActivity = (run: SubagentRun): Activity => {
+  const now = Date.now();
+  const createdAt = new Date(run.started_at).getTime();
+  const diffMs = now - createdAt;
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  let relativeTime = 'Just now';
+  if (diffMins < 1) {
+    relativeTime = 'Just now';
+  } else if (diffMins < 60) {
+    relativeTime = `${diffMins}m ago`;
+  } else if (diffHours < 24) {
+    relativeTime = `${diffHours}h ago`;
+  } else {
+    relativeTime = `${diffDays}d ago`;
+  }
+
+  // Determine activity type based on status
+  let type: 'spawned' | 'completed' | 'failed' = 'spawned';
+  if (run.status === 'completed') {
+    type = 'completed';
+  } else if (run.status === 'failed' || run.status === 'error') {
+    type = 'failed';
+  }
+
+  return {
+    id: run.id,
+    title: `${run.name} ${type}`,
+    description: run.task_description || `Agent ${run.model || 'unknown model'}`,
+    type,
+    time: relativeTime,
+    cost: run.cost || 0,
+    timestamp: run.started_at,
+  };
+};
+
 export interface Agent {
   id: string;
   name: string;
@@ -49,6 +87,7 @@ export interface Activity {
   type: 'spawned' | 'completed' | 'failed';
   time: string;
   cost?: number;
+  timestamp: string;
 }
 
 export interface Stats {
@@ -75,6 +114,8 @@ interface DashboardStore {
 
   setActivities: (activities: Activity[]) => void;
   addActivity: (activity: Activity) => void;
+  loadActivitiesFromSupabase: () => Promise<void>;
+  subscribeToActivities: () => () => void;
 
   setStats: (stats: Stats) => void;
   updateStats: (updates: Partial<Stats>) => void;
@@ -223,6 +264,61 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   addActivity: (activity) => set((state) => ({
     activities: [activity, ...state.activities.slice(0, 9)] // Keep only last 10
   })),
+
+  loadActivitiesFromSupabase: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('subagent_runs')
+        .select('*')
+        .order('started_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+
+      const activities = (data || []).map(mapSubagentRunToActivity);
+      set({ activities });
+    } catch (error) {
+      console.error('Error loading activities from Supabase:', error);
+    }
+  },
+
+  subscribeToActivities: () => {
+    const channel = supabase
+      .channel('activities-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'subagent_runs'
+        },
+        (payload) => {
+          const run = payload.new as SubagentRun || payload.old as SubagentRun;
+          const activity = mapSubagentRunToActivity(run);
+
+          switch (payload.eventType) {
+            case 'INSERT':
+              set((state) => ({ 
+                activities: [activity, ...state.activities.slice(0, 9)] 
+              }));
+              break;
+            case 'UPDATE':
+              // Only update if it's a status change that affects the timeline
+              if (run.status === 'completed' || run.status === 'failed' || run.status === 'error') {
+                set((state) => ({
+                  activities: [activity, ...state.activities.filter(a => a.id !== run.id).slice(0, 9)]
+                }));
+              }
+              break;
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  },
 
   setStats: (stats) => set({ stats }),
 

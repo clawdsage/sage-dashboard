@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Database } from '../types/supabase'
 import { formatRelativeTime, getStartOfDay, getStartOfWeek, getStartOfMonth } from '../utils/formatTime'
@@ -43,6 +43,10 @@ export const useActivityData = (
     totalTokens: 0
   })
 
+  // Store all runs and their transformed activities for incremental updates
+  const allRunsRef = useRef<SubagentRun[]>([])
+  const allActivitiesRef = useRef<ActivityEvent[]>([])
+
   // Fetch projects for mapping project IDs to names
   const fetchProjects = useCallback(async () => {
     try {
@@ -62,131 +66,131 @@ export const useActivityData = (
     }
   }, [])
 
-  // Transform subagent runs into activity events
-  const transformToActivityEvents = useCallback((runs: SubagentRun[]): ActivityEvent[] => {
-    return runs.map(run => {
-      let type: 'spawn' | 'complete' | 'error' = 'spawn'
-      let description = ''
-      let timestamp = run.started_at
-      
-      if (run.status === 'completed' && run.completed_at) {
-        type = 'complete'
-        description = `Completed ${run.name}`
-        timestamp = run.completed_at
-      } else if (run.status === 'failed' || run.status === 'error') {
-        type = 'error'
-        description = `${run.name} encountered an error`
-        timestamp = run.completed_at || run.started_at
-      } else if (run.status === 'active') {
-        type = 'spawn'
-        description = `Spawned ${run.name}`
-      } else {
-        type = 'spawn'
-        description = `Started ${run.name}`
-      }
+  // Transform a single subagent run into an activity event
+  const transformToActivityEvent = useCallback((run: SubagentRun): ActivityEvent => {
+    let type: 'spawn' | 'complete' | 'error' = 'spawn'
+    let description = ''
+    let timestamp = run.started_at
+    
+    if (run.status === 'completed' && run.completed_at) {
+      type = 'complete'
+      description = `Completed ${run.name}`
+      timestamp = run.completed_at
+    } else if (run.status === 'failed' || run.status === 'error') {
+      type = 'error'
+      description = `${run.name} encountered an error`
+      timestamp = run.completed_at || run.started_at
+    } else if (run.status === 'active') {
+      type = 'spawn'
+      description = `Spawned ${run.name}`
+    } else {
+      type = 'spawn'
+      description = `Started ${run.name}`
+    }
 
-      return {
-        id: run.id,
-        type,
-        timestamp,
-        relativeTime: formatRelativeTime(timestamp),
-        agentName: run.name,
-        description,
-        projectId: run.project_id,
-        projectName: run.project_id ? projects[run.project_id]?.name : undefined,
-        status: run.status,
-        progress: run.progress,
-        tokensUsed: run.tokens_used || 0,
-        cost: run.cost || 0,
-        startedAt: run.started_at,
-        completedAt: run.completed_at
-      }
-    })
+    return {
+      id: run.id,
+      type,
+      timestamp,
+      relativeTime: formatRelativeTime(timestamp),
+      agentName: run.name,
+      description,
+      projectId: run.project_id,
+      projectName: run.project_id ? projects[run.project_id]?.name : undefined,
+      status: run.status,
+      progress: run.progress,
+      tokensUsed: run.tokens_used || 0,
+      cost: run.cost || 0,
+      startedAt: run.started_at,
+      completedAt: run.completed_at
+    }
   }, [projects])
 
-  // Calculate statistics
-  const calculateStats = useCallback((events: ActivityEvent[]) => {
-    const spawns = events.filter(e => e.type === 'spawn').length
-    const completions = events.filter(e => e.type === 'complete').length
-    const errors = events.filter(e => e.type === 'error').length
-    const totalCost = events.reduce((sum, e) => sum + e.cost, 0)
-    const totalTokens = events.reduce((sum, e) => sum + e.tokensUsed, 0)
+  // Apply filters to activities
+  const applyFilters = useCallback((activities: ActivityEvent[]) => {
+    let filtered = activities
+    
+    // Apply type filter
+    if (filter !== 'all') {
+      filtered = filtered.filter(event => {
+        if (filter === 'spawns') return event.type === 'spawn'
+        if (filter === 'completions') return event.type === 'complete'
+        if (filter === 'errors') return event.type === 'error'
+        return true
+      })
+    }
 
-    setStats({
-      total: events.length,
+    // Apply date filter
+    if (dateRange !== 'all') {
+      const now = new Date()
+      let startDate: Date
+      
+      if (dateRange === 'today') {
+        startDate = getStartOfDay(now)
+      } else if (dateRange === 'week') {
+        startDate = getStartOfWeek(now)
+      } else {
+        startDate = getStartOfMonth(now)
+      }
+      
+      filtered = filtered.filter(event => {
+        const eventDate = new Date(event.timestamp)
+        return eventDate >= startDate
+      })
+    }
+
+    // Apply limit
+    return filtered.slice(0, limit)
+  }, [filter, dateRange, limit])
+
+  // Calculate statistics from filtered activities
+  const calculateStats = useCallback((filteredActivities: ActivityEvent[]) => {
+    const spawns = filteredActivities.filter(e => e.type === 'spawn').length
+    const completions = filteredActivities.filter(e => e.type === 'complete').length
+    const errors = filteredActivities.filter(e => e.type === 'error').length
+    const totalCost = filteredActivities.reduce((sum, e) => sum + e.cost, 0)
+    const totalTokens = filteredActivities.reduce((sum, e) => sum + e.tokensUsed, 0)
+
+    return {
+      total: filteredActivities.length,
       spawns,
       completions,
       errors,
       totalCost,
       totalTokens
-    })
+    }
   }, [])
 
-  // Fetch activity data
-  const fetchActivityData = useCallback(async (showLoading = false) => {
-    try {
-      if (showLoading) {
-        setLoading(true)
-      }
-      
-      // Build date filter
-      let dateFilter = {}
-      const now = new Date()
-      
-      if (dateRange === 'today') {
-        const startOfDay = getStartOfDay(now)
-        dateFilter = { started_at: { gte: startOfDay.toISOString() } }
-      } else if (dateRange === 'week') {
-        const startOfWeek = getStartOfWeek(now)
-        dateFilter = { started_at: { gte: startOfWeek.toISOString() } }
-      } else if (dateRange === 'month') {
-        const startOfMonth = getStartOfMonth(now)
-        dateFilter = { started_at: { gte: startOfMonth.toISOString() } }
-      }
+  // Update filtered activities and stats
+  const updateFilteredActivities = useCallback(() => {
+    const filtered = applyFilters(allActivitiesRef.current)
+    setActivities(filtered)
+    setStats(calculateStats(filtered))
+  }, [applyFilters, calculateStats])
 
+  // Fetch initial activity data
+  const fetchActivityData = useCallback(async () => {
+    try {
+      setLoading(true)
+      
       // Fetch subagent runs
       const { data: runs, error } = await supabase
         .from('subagent_runs')
         .select('*')
         .order('started_at', { ascending: false })
-        .limit(limit)
 
       if (error) throw error
 
-      // Transform to activity events
-      const events = transformToActivityEvents(runs || [])
+      // Store all runs
+      allRunsRef.current = runs || []
       
-      // Apply filters
-      let filteredEvents = events
-      if (filter !== 'all') {
-        filteredEvents = events.filter(event => {
-          if (filter === 'spawns') return event.type === 'spawn'
-          if (filter === 'completions') return event.type === 'complete'
-          if (filter === 'errors') return event.type === 'error'
-          return true
-        })
-      }
-
-      // Apply date filter
-      if (dateRange !== 'all') {
-        filteredEvents = filteredEvents.filter(event => {
-          const eventDate = new Date(event.timestamp)
-          let startDate: Date
-          
-          if (dateRange === 'today') {
-            startDate = getStartOfDay(now)
-          } else if (dateRange === 'week') {
-            startDate = getStartOfWeek(now)
-          } else {
-            startDate = getStartOfMonth(now)
-          }
-          
-          return eventDate >= startDate
-        })
-      }
-
-      setActivities(filteredEvents)
-      calculateStats(filteredEvents)
+      // Transform to activity events
+      const events = allRunsRef.current.map(run => transformToActivityEvent(run))
+      allActivitiesRef.current = events
+      
+      // Update filtered activities
+      updateFilteredActivities()
+      
       setError(null)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load activity data'
@@ -195,12 +199,54 @@ export const useActivityData = (
     } finally {
       setLoading(false)
     }
-  }, [filter, dateRange, limit, transformToActivityEvents, calculateStats])
+  }, [transformToActivityEvent, updateFilteredActivities])
+
+  // Handle realtime updates
+  const handleRealtimeUpdate = useCallback((payload: any) => {
+    // Smooth animation trigger
+    const event = new CustomEvent('data-update', { 
+      detail: { table: 'subagent_runs', event: payload.eventType }
+    })
+    window.dispatchEvent(event)
+
+    switch (payload.eventType) {
+      case 'INSERT': {
+        const newRun = payload.new as SubagentRun
+        // Add to runs array
+        allRunsRef.current = [newRun, ...allRunsRef.current]
+        break
+      }
+      
+      case 'UPDATE': {
+        const updatedRun = payload.new as SubagentRun
+        // Update in runs array
+        allRunsRef.current = allRunsRef.current.map(run => 
+          run.id === updatedRun.id ? updatedRun : run
+        )
+        break
+      }
+      
+      case 'DELETE': {
+        const deletedRun = payload.old as SubagentRun
+        // Remove from runs array
+        allRunsRef.current = allRunsRef.current.filter(
+          run => run.id !== deletedRun.id
+        )
+        break
+      }
+    }
+    
+    // Re-transform all runs to activities
+    allActivitiesRef.current = allRunsRef.current.map(run => transformToActivityEvent(run))
+    
+    // Update filtered activities after change
+    updateFilteredActivities()
+  }, [transformToActivityEvent, updateFilteredActivities])
 
   // Set up realtime subscription
   useEffect(() => {
     fetchProjects()
-    fetchActivityData(true) // Show loading on initial fetch
+    fetchActivityData()
 
     const channel = supabase
       .channel('activity-data-changes')
@@ -211,25 +257,34 @@ export const useActivityData = (
           schema: 'public',
           table: 'subagent_runs'
         },
-        () => {
-          // Refresh data when subagent runs change (no loading indicator)
-          fetchActivityData(false)
-        }
+        handleRealtimeUpdate
       )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [fetchProjects, fetchActivityData])
+  }, [fetchProjects, fetchActivityData, handleRealtimeUpdate])
 
-  // Removed auto-refresh interval - real-time subscription is sufficient
+  // Update when filters change
+  useEffect(() => {
+    updateFilteredActivities()
+  }, [filter, dateRange, limit, updateFilteredActivities])
+
+  // Refresh activities when projects change (to update project names)
+  useEffect(() => {
+    if (Object.keys(projects).length > 0 && allRunsRef.current.length > 0) {
+      // Re-transform all runs with updated project data
+      allActivitiesRef.current = allRunsRef.current.map(run => transformToActivityEvent(run))
+      updateFilteredActivities()
+    }
+  }, [projects, transformToActivityEvent, updateFilteredActivities])
 
   return {
     activities,
     loading,
     error,
     stats,
-    refetch: () => fetchActivityData(true) // Show loading on manual refresh
+    refetch: () => fetchActivityData()
   }
 }

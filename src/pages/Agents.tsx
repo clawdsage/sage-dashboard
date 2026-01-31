@@ -2,6 +2,7 @@ import { Bot, Play, Pause, Settings, Cpu, Zap, Clock, DollarSign, MoreVertical, 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
+import { useRealtimeSubagentRuns } from '../hooks/useRealtimeSubagentRuns'
 
 interface AgentRun {
   id: string
@@ -25,31 +26,15 @@ interface Project {
 }
 
 const Agents = () => {
-  const [agents, setAgents] = useState<AgentRun[]>([])
+  const { subagentRuns: agents, loading, error, refetch, stats } = useRealtimeSubagentRuns()
   const [projects, setProjects] = useState<Record<string, Project>>({})
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
-  // Fetch agent runs and projects from Supabase
-  const fetchAgentRuns = async () => {
-    try {
-      setLoading(true)
-      
-      // Fetch agent runs
-      const { data: agentsData, error: agentsError } = await supabase
-        .from('subagent_runs')
-        .select('*')
-        .order('started_at', { ascending: false })
-
-      if (agentsError) {
-        throw agentsError
-      }
-
-      setAgents(agentsData || [])
-      
+  // Fetch projects for agent runs
+  useEffect(() => {
+    const fetchProjects = async () => {
       // Get unique project IDs from agent runs
-      const projectIds = [...new Set(agentsData
-        ?.filter(agent => agent.project_id)
+      const projectIds = [...new Set(agents
+        .filter(agent => agent.project_id)
         .map(agent => agent.project_id) as string[]
       )]
       
@@ -74,23 +59,10 @@ const Agents = () => {
       } else {
         setProjects({})
       }
-      
-      setError(null)
-    } catch (err) {
-      console.error('Error fetching agent runs:', err)
-      setError('Failed to load agent data. Please try again.')
-    } finally {
-      setLoading(false)
     }
-  }
 
-  // Set up auto-refresh every 15 seconds
-  useEffect(() => {
-    fetchAgentRuns()
-    
-    const interval = setInterval(fetchAgentRuns, 15000)
-    return () => clearInterval(interval)
-  }, [])
+    fetchProjects()
+  }, [agents])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -164,7 +136,7 @@ const Agents = () => {
     // In a real app, this would update the status in Supabase
     console.log('Toggle agent status for:', id)
     // For now, just refetch the data
-    fetchAgentRuns()
+    refetch()
   }
 
   if (loading) {
@@ -183,10 +155,10 @@ const Agents = () => {
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
           <div className="p-4 rounded-lg bg-red-500/20 text-red-400 mb-4">
-            <p>{error}</p>
+            <p>{error.message || 'Failed to load agent data. Please try again.'}</p>
           </div>
           <button
-            onClick={fetchAgentRuns}
+            onClick={refetch}
             className="btn-primary"
           >
             Retry
@@ -197,9 +169,9 @@ const Agents = () => {
   }
 
   // Calculate stats from real data
-  const activeAgents = agents.filter(a => a.status === 'active').length
+  const activeAgents = stats.activeAgents
   const totalTasks = agents.filter(a => a.status === 'completed').length
-  const totalCost = agents.reduce((sum, agent) => sum + (agent.cost || 0), 0)
+  const totalCost = stats.totalCost
   const avgCpu = agents.length > 0 
     ? Math.round(agents.reduce((sum, agent) => sum + calculateCpu(agent.status, agent.progress), 0) / agents.length)
     : 0

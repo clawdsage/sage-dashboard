@@ -4,6 +4,19 @@ A modern, professional dashboard for tracking and managing AI sub-agent work. Bu
 
 ## Features
 
+### Dashboard V2 (Latest)
+
+- **Real-time Live Agents Widget**: Monitor active sub-agents with progress bars and zero-flash updates
+- **Activity Timeline**: Real-time feed of all system activities and agent completions
+- **Agent History**: Complete searchable history of all agent runs with expandable details
+- **Project Analytics**: Track project costs, agent counts, and performance metrics
+- **Cost Analytics**: Comprehensive cost tracking with interactive charts and breakdowns
+- **Zero-Flash Filtering**: Instant filtering and sorting without UI flickering
+- **Virtual Scrolling**: Smooth performance with thousands of agent records
+- **Mobile-First Design**: Responsive layouts optimized for all screen sizes
+
+### Core Features
+
 - **Real-time Monitoring**: Track active sub-agents, their progress, and resource usage
 - **Project Management**: Organize AI projects with status tracking and deadlines
 - **Review Queue**: Approve, reject, or request changes for sub-agent outputs with feedback

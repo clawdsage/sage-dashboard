@@ -6,6 +6,9 @@ import { Loader2 } from 'lucide-react'
 // Lazy load page components for better performance
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const DashboardV2 = lazy(() => import('./pages/DashboardV2'))
+const DashboardV2Agents = lazy(() => import('./pages/DashboardV2Agents'))
+const DashboardV2Projects = lazy(() => import('./pages/DashboardV2Projects'))
+const DashboardV2Costs = lazy(() => import('./pages/DashboardV2Costs'))
 const Login = lazy(() => import('./pages/Login'))
 const Projects = lazy(() => import('./pages/Projects'))
 const ProjectDetail = lazy(() => import('./pages/ProjectDetail'))
@@ -34,6 +37,9 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="dashboard-v2" element={<DashboardV2 />} />
+            <Route path="dashboard-v2/agents" element={<DashboardV2Agents />} />
+            <Route path="dashboard-v2/projects" element={<DashboardV2Projects />} />
+            <Route path="dashboard-v2/costs" element={<DashboardV2Costs />} />
             <Route path="projects" element={<Projects />} />
             <Route path="project/:id" element={<ProjectDetail />} />
             <Route path="agents" element={<Agents />} />

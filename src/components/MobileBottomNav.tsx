@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Home, FolderKanban, Bot, ClipboardCheck, Clock, BarChart3, Settings } from 'lucide-react'
+import { Home, FolderKanban, Bot, ClipboardCheck, Clock, BarChart3, Settings, Users, DollarSign } from 'lucide-react'
 import { usePendingReviewCount } from '../hooks'
 import { useRef, useEffect, useState } from 'react'
 
@@ -11,11 +11,14 @@ const MobileBottomNav = () => {
   
   const navItems = [
     { to: '/', icon: Home, label: 'Dashboard' },
+    { to: '/dashboard-v2/agents', icon: Bot, label: 'Agent History' },
+    { to: '/dashboard-v2/projects', icon: Users, label: 'Projects' },
+    { to: '/dashboard-v2/costs', icon: DollarSign, label: 'Costs' },
     { to: '/projects', icon: FolderKanban, label: 'Projects' },
     { to: '/agents', icon: Bot, label: 'Agents' },
-    { 
-      to: '/review', 
-      icon: ClipboardCheck, 
+    {
+      to: '/review',
+      icon: ClipboardCheck,
       label: 'Review',
       badge: pendingReviewCount > 0 ? pendingReviewCount : undefined
     },

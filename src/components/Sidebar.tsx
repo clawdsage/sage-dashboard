@@ -1,14 +1,16 @@
 import { NavLink } from 'react-router-dom'
-import { 
-  Home, 
-  FolderKanban, 
-  BarChart3, 
+import {
+  Home,
+  FolderKanban,
+  BarChart3,
   Settings,
   Bot,
   Clock,
   CheckCircle,
   ClipboardCheck,
-  LayoutDashboard
+  LayoutDashboard,
+  Users,
+  DollarSign
 } from 'lucide-react'
 import { usePendingReviewCount } from '../hooks'
 
@@ -18,11 +20,14 @@ const Sidebar = () => {
   const navItems = [
     { to: '/', icon: Home, label: 'Dashboard' },
     { to: '/dashboard-v2', icon: LayoutDashboard, label: 'Dashboard V2' },
+    { to: '/dashboard-v2/agents', icon: Bot, label: 'Agent History' },
+    { to: '/dashboard-v2/projects', icon: Users, label: 'Projects' },
+    { to: '/dashboard-v2/costs', icon: DollarSign, label: 'Cost Analytics' },
     { to: '/projects', icon: FolderKanban, label: 'Projects' },
     { to: '/agents', icon: Bot, label: 'Sub-agents' },
-    { 
-      to: '/review', 
-      icon: ClipboardCheck, 
+    {
+      to: '/review',
+      icon: ClipboardCheck,
       label: 'Review Queue',
       badge: pendingReviewCount > 0 ? pendingReviewCount : undefined
     },

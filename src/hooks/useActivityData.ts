@@ -46,6 +46,8 @@ export const useActivityData = (
   // Store all runs and their transformed activities for incremental updates
   const allRunsRef = useRef<SubagentRun[]>([])
   const allActivitiesRef = useRef<ActivityEvent[]>([])
+  // Debounce timer for rapid updates
+  const updateTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Fetch projects for mapping project IDs to names
   const fetchProjects = useCallback(async () => {
@@ -164,7 +166,32 @@ export const useActivityData = (
   // Update filtered activities and stats
   const updateFilteredActivities = useCallback(() => {
     const filtered = applyFilters(allActivitiesRef.current)
-    setActivities(filtered)
+    
+    // Only update if the filtered activities have actually changed
+    setActivities(prev => {
+      // Quick check: if lengths differ, definitely update
+      if (prev.length !== filtered.length) return filtered
+      
+      // Deep comparison: check if any activity has changed
+      for (let i = 0; i < filtered.length; i++) {
+        if (prev[i]?.id !== filtered[i]?.id) return filtered
+        // Check if any important properties have changed
+        if (
+          prev[i]?.type !== filtered[i]?.type ||
+          prev[i]?.status !== filtered[i]?.status ||
+          prev[i]?.progress !== filtered[i]?.progress ||
+          prev[i]?.cost !== filtered[i]?.cost ||
+          prev[i]?.tokensUsed !== filtered[i]?.tokensUsed
+        ) {
+          return filtered
+        }
+      }
+      
+      // No changes detected, return previous array to prevent re-render
+      return prev
+    })
+    
+    // Always update stats since they're derived from filtered activities
     setStats(calculateStats(filtered))
   }, [applyFilters, calculateStats])
 
@@ -201,7 +228,7 @@ export const useActivityData = (
     }
   }, [transformToActivityEvent, updateFilteredActivities])
 
-  // Handle realtime updates
+  // Handle realtime updates with debouncing
   const handleRealtimeUpdate = useCallback((payload: any) => {
     // Smooth animation trigger
     const event = new CustomEvent('data-update', { 
@@ -239,8 +266,14 @@ export const useActivityData = (
     // Re-transform all runs to activities
     allActivitiesRef.current = allRunsRef.current.map(run => transformToActivityEvent(run))
     
-    // Update filtered activities after change
-    updateFilteredActivities()
+    // Debounce the filtered activities update to prevent rapid re-renders
+    if (updateTimerRef.current) {
+      clearTimeout(updateTimerRef.current)
+    }
+    
+    updateTimerRef.current = setTimeout(() => {
+      updateFilteredActivities()
+    }, 100) // 100ms debounce
   }, [transformToActivityEvent, updateFilteredActivities])
 
   // Set up realtime subscription
@@ -263,6 +296,9 @@ export const useActivityData = (
 
     return () => {
       supabase.removeChannel(channel)
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current)
+      }
     }
   }, [fetchProjects, fetchActivityData, handleRealtimeUpdate])
 

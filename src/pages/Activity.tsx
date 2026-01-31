@@ -4,7 +4,7 @@ import {
   ChevronDown, ChevronRight, Zap, TrendingUp, Activity as ActivityIcon,
   Clock3, BarChart3
 } from 'lucide-react'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, memo, useCallback } from 'react'
 import { useActivityData, type DateRange } from '../hooks/useActivityData'
 import { formatDate } from '../utils/formatTime'
 import { Link } from 'react-router-dom'
@@ -26,6 +26,231 @@ interface Activity {
   model?: string
   errorMessage?: string
 }
+
+// Memoized Activity Item Component
+interface ActivityItemProps {
+  activity: Activity
+  isExpanded: boolean
+  onToggleExpanded: (id: string) => void
+  getEventIcon: (type: 'spawn' | 'complete' | 'error') => any
+  getEventColor: (type: 'spawn' | 'complete' | 'error') => { text: string; bg: string; border: string }
+  getEventLabel: (type: 'spawn' | 'complete' | 'error') => string
+  formatCost: (cost: number) => string
+  formatTokens: (tokens: number) => string
+  formatDuration: (seconds: number) => string
+}
+
+const ActivityItem = memo(function ActivityItem({
+  activity,
+  isExpanded,
+  onToggleExpanded,
+  getEventIcon,
+  getEventColor,
+  getEventLabel,
+  formatCost,
+  formatTokens,
+  formatDuration
+}: ActivityItemProps) {
+  const Icon = getEventIcon(activity.type)
+  const colors = getEventColor(activity.type)
+  const eventLabel = getEventLabel(activity.type)
+  
+  return (
+    <div 
+      className={`border rounded-lg transition-all duration-200 ease-in-out ${colors.border} ${
+        isExpanded ? 'bg-slate-800/50' : 'bg-slate-900/30'
+      } animate-fade-in`}
+      style={{ 
+        willChange: 'transform, opacity',
+        transition: 'all 0.2s ease-in-out'
+      }}
+    >
+      {/* Main Activity Row */}
+      <div className="flex gap-4 p-4">
+        {/* Icon */}
+        <div className={`p-3 rounded-lg ${colors.bg} flex-shrink-0 h-fit`}>
+          <Icon className={`w-5 h-5 ${colors.text}`} />
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-white break-words">{activity.description}</h3>
+              <div className="flex flex-wrap items-center gap-3 mt-2">
+                <div className="flex items-center gap-1 text-sm">
+                  <Bot className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  <span className="text-slate-400">{activity.agentName}</span>
+                </div>
+                {activity.projectName && (
+                  <>
+                    <span className="text-slate-600">•</span>
+                    <div className="flex items-center gap-1 text-sm">
+                      <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      {activity.projectId ? (
+                        <Link
+                          to={`/project/${activity.projectId}`}
+                          className="text-slate-400 hover:text-primary transition-colors"
+                        >
+                          {activity.projectName}
+                        </Link>
+                      ) : (
+                        <span className="text-slate-400">{activity.projectName}</span>
+                      )}
+                    </div>
+                  </>
+                )}
+                {activity.type === 'complete' && activity.cost > 0 && (
+                  <>
+                    <span className="text-slate-600">•</span>
+                    <div className="flex items-center gap-1 text-sm">
+                      <DollarSign className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      <span className="text-slate-400">{formatCost(activity.cost)}</span>
+                    </div>
+                  </>
+                )}
+                {activity.type === 'complete' && activity.tokensUsed > 0 && (
+                  <>
+                    <span className="text-slate-600">•</span>
+                    <div className="flex items-center gap-1 text-sm">
+                      <Hash className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      <span className="text-slate-400">{formatTokens(activity.tokensUsed)} tokens</span>
+                    </div>
+                  </>
+                )}
+                {activity.duration && (
+                  <>
+                    <span className="text-slate-600">•</span>
+                    <div className="flex items-center gap-1 text-sm">
+                      <Clock3 className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      <span className="text-slate-400">{formatDuration(activity.duration)}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <div className="text-right">
+                <span className="text-sm text-slate-400 block whitespace-nowrap">{activity.relativeTime}</span>
+                <span className="text-xs text-slate-500 block whitespace-nowrap">{formatDate(activity.timestamp)}</span>
+              </div>
+              <span className={`text-xs px-2 py-1 rounded-full ${colors.bg} ${colors.text} whitespace-nowrap`}>
+                {eventLabel}
+              </span>
+              <button
+                onClick={() => onToggleExpanded(activity.id)}
+                className="p-2 hover:bg-slate-700 rounded transition-colors"
+                title="Toggle details"
+              >
+                {isExpanded ? (
+                  <ChevronDown className="w-5 h-5 text-slate-400" />
+                ) : (
+                  <ChevronRight className="w-5 h-5 text-slate-400" />
+                )}
+              </button>
+            </div>
+          </div>
+          
+          {/* Progress bar for active agents */}
+          {activity.type === 'spawn' && activity.status === 'active' && (
+            <div className="mt-3">
+              <div className="flex justify-between text-xs text-slate-400 mb-1">
+                <span>Progress</span>
+                <span>{activity.progress}%</span>
+              </div>
+              <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                  style={{ width: `${activity.progress}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Expanded Detail View */}
+      {isExpanded && (
+        <div className="border-t border-slate-700 bg-slate-900/50 p-4">
+          <h4 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Activity Details
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Activity ID</p>
+              <p className="text-sm text-slate-300 font-mono">{activity.id}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Type</p>
+              <p className="text-sm text-slate-300 capitalize">{activity.type}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Status</p>
+              <p className="text-sm text-slate-300 capitalize">{activity.status || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Agent Name</p>
+              <p className="text-sm text-slate-300">{activity.agentName}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Model</p>
+              <p className="text-sm text-slate-300 font-mono">{activity.model || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Timestamp</p>
+              <p className="text-sm text-slate-300">{new Date(activity.timestamp).toLocaleString()}</p>
+            </div>
+            {activity.cost > 0 && (
+              <div>
+                <p className="text-xs text-slate-500 mb-1">Cost</p>
+                <p className="text-sm text-slate-300">{formatCost(activity.cost)}</p>
+              </div>
+            )}
+            {activity.tokensUsed > 0 && (
+              <div>
+                <p className="text-xs text-slate-500 mb-1">Tokens Used</p>
+                <p className="text-sm text-slate-300">{activity.tokensUsed.toLocaleString()}</p>
+              </div>
+            )}
+            {activity.duration && (
+              <div>
+                <p className="text-xs text-slate-500 mb-1">Duration</p>
+                <p className="text-sm text-slate-300">{formatDuration(activity.duration)}</p>
+              </div>
+            )}
+            {activity.progress !== undefined && (
+              <div>
+                <p className="text-xs text-slate-500 mb-1">Progress</p>
+                <p className="text-sm text-slate-300">{activity.progress}%</p>
+              </div>
+            )}
+            {activity.projectId && (
+              <div>
+                <p className="text-xs text-slate-500 mb-1">Project ID</p>
+                <p className="text-sm text-slate-300 font-mono">{activity.projectId}</p>
+              </div>
+            )}
+          </div>
+          
+          {activity.errorMessage && (
+            <div className="mt-4 p-3 bg-red-900/20 border border-red-800/30 rounded-lg">
+              <p className="text-xs text-slate-500 mb-1">Error Message</p>
+              <p className="text-sm text-red-400 font-mono">{activity.errorMessage}</p>
+            </div>
+          )}
+
+          {activity.description && (
+            <div className="mt-4">
+              <p className="text-xs text-slate-500 mb-1">Full Description</p>
+              <p className="text-sm text-slate-300">{activity.description}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+})
 
 const Activity = () => {
   const [filter, setFilter] = useState<'all' | 'spawns' | 'completions' | 'errors'>('all')
@@ -196,52 +421,52 @@ const Activity = () => {
     { id: 'all', label: 'All Time' },
   ]
 
-  const getEventIcon = (type: 'spawn' | 'complete' | 'error') => {
+  const getEventIcon = useCallback((type: 'spawn' | 'complete' | 'error') => {
     switch (type) {
       case 'spawn': return Play
       case 'complete': return CheckCircle
       case 'error': return AlertCircle
       default: return Clock
     }
-  }
+  }, [])
 
-  const getEventColor = (type: 'spawn' | 'complete' | 'error') => {
+  const getEventColor = useCallback((type: 'spawn' | 'complete' | 'error') => {
     switch (type) {
       case 'spawn': return { text: 'text-blue-500', bg: 'bg-blue-500/20', border: 'border-blue-500/30' }
       case 'complete': return { text: 'text-green-500', bg: 'bg-green-500/20', border: 'border-green-500/30' }
       case 'error': return { text: 'text-red-500', bg: 'bg-red-500/20', border: 'border-red-500/30' }
       default: return { text: 'text-slate-500', bg: 'bg-slate-500/20', border: 'border-slate-500/30' }
     }
-  }
+  }, [])
 
-  const getEventLabel = (type: 'spawn' | 'complete' | 'error') => {
+  const getEventLabel = useCallback((type: 'spawn' | 'complete' | 'error') => {
     switch (type) {
       case 'spawn': return 'Agent Spawned'
       case 'complete': return 'Agent Completed'
       case 'error': return 'Agent Error'
       default: return 'Activity'
     }
-  }
+  }, [])
 
-  const formatCost = (cost: number) => {
+  const formatCost = useCallback((cost: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2,
       maximumFractionDigits: 4
     }).format(cost)
-  }
+  }, [])
 
-  const formatTokens = (tokens: number) => {
+  const formatTokens = useCallback((tokens: number) => {
     if (tokens >= 1000000) {
       return `${(tokens / 1000000).toFixed(1)}M`
     } else if (tokens >= 1000) {
       return `${(tokens / 1000).toFixed(1)}K`
     }
     return tokens.toString()
-  }
+  }, [])
 
-  const formatDuration = (seconds: number) => {
+  const formatDuration = useCallback((seconds: number) => {
     if (seconds < 60) {
       return `${seconds}s`
     } else if (seconds < 3600) {
@@ -253,7 +478,7 @@ const Activity = () => {
       const minutes = Math.floor((seconds % 3600) / 60)
       return `${hours}h ${minutes}m`
     }
-  }
+  }, [])
 
   // Calculate additional stats
   const averageCost = stats.total > 0 ? stats.totalCost / stats.total : 0
@@ -577,205 +802,20 @@ const Activity = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredActivities.map((activity) => {
-              const Icon = getEventIcon(activity.type)
-              const colors = getEventColor(activity.type)
-              const eventLabel = getEventLabel(activity.type)
-              const isExpanded = expandedActivities.has(activity.id)
-              
-              return (
-                <div 
-                  key={activity.id} 
-                  className={`border rounded-lg transition-all ${colors.border} ${
-                    isExpanded ? 'bg-slate-800/50' : 'bg-slate-900/30'
-                  }`}
-                >
-                  {/* Main Activity Row */}
-                  <div className="flex gap-4 p-4">
-                    {/* Icon */}
-                    <div className={`p-3 rounded-lg ${colors.bg} flex-shrink-0 h-fit`}>
-                      <Icon className={`w-5 h-5 ${colors.text}`} />
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-white break-words">{activity.description}</h3>
-                          <div className="flex flex-wrap items-center gap-3 mt-2">
-                            <div className="flex items-center gap-1 text-sm">
-                              <Bot className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                              <span className="text-slate-400">{activity.agentName}</span>
-                            </div>
-                            {activity.projectName && (
-                              <>
-                                <span className="text-slate-600">•</span>
-                                <div className="flex items-center gap-1 text-sm">
-                                  <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                                  {activity.projectId ? (
-                                    <Link
-                                      to={`/project/${activity.projectId}`}
-                                      className="text-slate-400 hover:text-primary transition-colors"
-                                    >
-                                      {activity.projectName}
-                                    </Link>
-                                  ) : (
-                                    <span className="text-slate-400">{activity.projectName}</span>
-                                  )}
-                                </div>
-                              </>
-                            )}
-                            {activity.type === 'complete' && activity.cost > 0 && (
-                              <>
-                                <span className="text-slate-600">•</span>
-                                <div className="flex items-center gap-1 text-sm">
-                                  <DollarSign className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                                  <span className="text-slate-400">{formatCost(activity.cost)}</span>
-                                </div>
-                              </>
-                            )}
-                            {activity.type === 'complete' && activity.tokensUsed > 0 && (
-                              <>
-                                <span className="text-slate-600">•</span>
-                                <div className="flex items-center gap-1 text-sm">
-                                  <Hash className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                                  <span className="text-slate-400">{formatTokens(activity.tokensUsed)} tokens</span>
-                                </div>
-                              </>
-                            )}
-                            {activity.duration && (
-                              <>
-                                <span className="text-slate-600">•</span>
-                                <div className="flex items-center gap-1 text-sm">
-                                  <Clock3 className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                                  <span className="text-slate-400">{formatDuration(activity.duration)}</span>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 flex-shrink-0">
-                          <div className="text-right">
-                            <span className="text-sm text-slate-400 block whitespace-nowrap">{activity.relativeTime}</span>
-                            <span className="text-xs text-slate-500 block whitespace-nowrap">{formatDate(activity.timestamp)}</span>
-                          </div>
-                          <span className={`text-xs px-2 py-1 rounded-full ${colors.bg} ${colors.text} whitespace-nowrap`}>
-                            {eventLabel}
-                          </span>
-                          <button
-                            onClick={() => toggleExpanded(activity.id)}
-                            className="p-2 hover:bg-slate-700 rounded transition-colors"
-                            title="Toggle details"
-                          >
-                            {isExpanded ? (
-                              <ChevronDown className="w-5 h-5 text-slate-400" />
-                            ) : (
-                              <ChevronRight className="w-5 h-5 text-slate-400" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                      
-                      {/* Progress bar for active agents */}
-                      {activity.type === 'spawn' && activity.status === 'active' && (
-                        <div className="mt-3">
-                          <div className="flex justify-between text-xs text-slate-400 mb-1">
-                            <span>Progress</span>
-                            <span>{activity.progress}%</span>
-                          </div>
-                          <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-blue-500 rounded-full transition-all duration-300"
-                              style={{ width: `${activity.progress}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Expanded Detail View */}
-                  {isExpanded && (
-                    <div className="border-t border-slate-700 bg-slate-900/50 p-4">
-                      <h4 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
-                        <FileText className="w-4 h-4" />
-                        Activity Details
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div>
-                          <p className="text-xs text-slate-500 mb-1">Activity ID</p>
-                          <p className="text-sm text-slate-300 font-mono">{activity.id}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-500 mb-1">Type</p>
-                          <p className="text-sm text-slate-300 capitalize">{activity.type}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-500 mb-1">Status</p>
-                          <p className="text-sm text-slate-300 capitalize">{activity.status || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-500 mb-1">Agent Name</p>
-                          <p className="text-sm text-slate-300">{activity.agentName}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-500 mb-1">Model</p>
-                          <p className="text-sm text-slate-300 font-mono">{activity.model || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-500 mb-1">Timestamp</p>
-                          <p className="text-sm text-slate-300">{new Date(activity.timestamp).toLocaleString()}</p>
-                        </div>
-                        {activity.cost > 0 && (
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Cost</p>
-                            <p className="text-sm text-slate-300">{formatCost(activity.cost)}</p>
-                          </div>
-                        )}
-                        {activity.tokensUsed > 0 && (
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Tokens Used</p>
-                            <p className="text-sm text-slate-300">{activity.tokensUsed.toLocaleString()}</p>
-                          </div>
-                        )}
-                        {activity.duration && (
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Duration</p>
-                            <p className="text-sm text-slate-300">{formatDuration(activity.duration)}</p>
-                          </div>
-                        )}
-                        {activity.progress !== undefined && (
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Progress</p>
-                            <p className="text-sm text-slate-300">{activity.progress}%</p>
-                          </div>
-                        )}
-                        {activity.projectId && (
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Project ID</p>
-                            <p className="text-sm text-slate-300 font-mono">{activity.projectId}</p>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {activity.errorMessage && (
-                        <div className="mt-4 p-3 bg-red-900/20 border border-red-800/30 rounded-lg">
-                          <p className="text-xs text-slate-500 mb-1">Error Message</p>
-                          <p className="text-sm text-red-400 font-mono">{activity.errorMessage}</p>
-                        </div>
-                      )}
-
-                      {activity.description && (
-                        <div className="mt-4">
-                          <p className="text-xs text-slate-500 mb-1">Full Description</p>
-                          <p className="text-sm text-slate-300">{activity.description}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+            {filteredActivities.map((activity) => (
+              <ActivityItem
+                key={activity.id}
+                activity={activity}
+                isExpanded={expandedActivities.has(activity.id)}
+                onToggleExpanded={toggleExpanded}
+                getEventIcon={getEventIcon}
+                getEventColor={getEventColor}
+                getEventLabel={getEventLabel}
+                formatCost={formatCost}
+                formatTokens={formatTokens}
+                formatDuration={formatDuration}
+              />
+            ))}
             
             {/* Load more indicator */}
             {activities.length >= 50 && (

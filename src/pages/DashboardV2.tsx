@@ -153,8 +153,6 @@ const DashboardV2: React.FC = () => {
                 </div>
               )}
             </div>
-          </div>
-
           {/* Activity Timeline (bottom-left, 25%) */}
           <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
             <div className="flex items-center justify-between mb-4">

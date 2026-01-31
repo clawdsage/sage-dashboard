@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useDashboardStore } from '../stores/dashboardStore';
 import ActivityTimeline from '../components/ActivityTimeline';
+import TodaysStats from '../components/TodaysStats';
+import ActionQueue from '../components/ActionQueue';
 
 const generateProgressBar = (progress: number): string => {
   const filled = Math.round((progress / 100) * 10);
@@ -10,14 +12,19 @@ const generateProgressBar = (progress: number): string => {
 };
 
 const DashboardV2: React.FC = () => {
-  const { 
-    agents, 
-    activities, 
-    stats, 
-    loadAgentsFromSupabase, 
+  const {
+    agents,
+    activities,
+    stats,
+    actionItems,
+    loadAgentsFromSupabase,
     subscribeToAgents,
     loadActivitiesFromSupabase,
-    subscribeToActivities 
+    subscribeToActivities,
+    loadStatsFromSupabase,
+    subscribeToStats,
+    loadActionItemsFromSupabase,
+    subscribeToActionItems
   } = useDashboardStore();
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -31,15 +38,21 @@ const DashboardV2: React.FC = () => {
   useEffect(() => {
     loadAgentsFromSupabase();
     loadActivitiesFromSupabase();
-    
+    loadStatsFromSupabase();
+    loadActionItemsFromSupabase();
+
     const unsubscribeAgents = subscribeToAgents();
     const unsubscribeActivities = subscribeToActivities();
-    
+    const unsubscribeStats = subscribeToStats();
+    const unsubscribeActionItems = subscribeToActionItems();
+
     return () => {
       unsubscribeAgents();
       unsubscribeActivities();
+      unsubscribeStats();
+      unsubscribeActionItems();
     };
-  }, [loadAgentsFromSupabase, subscribeToAgents, loadActivitiesFromSupabase, subscribeToActivities]);
+  }, [loadAgentsFromSupabase, subscribeToAgents, loadActivitiesFromSupabase, subscribeToActivities, loadStatsFromSupabase, subscribeToStats, loadActionItemsFromSupabase, subscribeToActionItems]);
 
   return (
     <div className="min-h-screen bg-slate-950 p-6">
@@ -158,24 +171,7 @@ const DashboardV2: React.FC = () => {
             {/* Today's Stats (top-right within remaining 50%) */}
             <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
               <h2 className="text-xl font-semibold text-slate-100 mb-4">Today's Stats</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-800/50 rounded-lg p-4">
-                  <div className="text-2xl font-bold text-slate-100">{stats.agentsRun}</div>
-                  <div className="text-sm text-slate-400 mt-1">Agents Run</div>
-                </div>
-                <div className="bg-slate-800/50 rounded-lg p-4">
-                  <div className="text-2xl font-bold text-slate-100">${stats.totalCost}</div>
-                  <div className="text-sm text-slate-400 mt-1">Total Cost</div>
-                </div>
-                <div className="bg-slate-800/50 rounded-lg p-4">
-                  <div className="text-2xl font-bold text-slate-100">{stats.tokensUsed.toLocaleString()}</div>
-                  <div className="text-sm text-slate-400 mt-1">Tokens Used</div>
-                </div>
-                <div className="bg-slate-800/50 rounded-lg p-4">
-                  <div className="text-2xl font-bold text-slate-100">{stats.avgTime}m</div>
-                  <div className="text-sm text-slate-400 mt-1">Avg Time</div>
-                </div>
-              </div>
+              <TodaysStats stats={stats} />
             </div>
 
             {/* Action Queue (bottom-right, 25%) */}
@@ -186,27 +182,14 @@ const DashboardV2: React.FC = () => {
                   {stats.actionsPending} pending
                 </span>
               </div>
-              <div className="space-y-3">
-                <div className="bg-slate-800/50 rounded-lg p-4 border-l-4 border-red-500">
-                  <div className="font-medium text-slate-100">Failed agent needs review</div>
-                  <div className="text-sm text-slate-400 mt-1">Agent "Build Dashboard" failed with error</div>
-                </div>
-                <div className="bg-slate-800/50 rounded-lg p-4 border-l-4 border-orange-500">
-                  <div className="font-medium text-slate-100">High-cost agent detected</div>
-                  <div className="text-sm text-slate-400 mt-1">Agent cost $12.45 exceeds threshold</div>
-                </div>
-                <div className="bg-slate-800/50 rounded-lg p-4 border-l-4 border-green-500">
-                  <div className="font-medium text-slate-100">Work completed</div>
-                  <div className="text-sm text-slate-400 mt-1">Review and approve completed task</div>
-                </div>
-              </div>
+              <ActionQueue actionItems={actionItems} />
             </div>
           </div>
         </div>
 
         {/* Footer Note */}
         <div className="mt-8 text-center text-sm text-slate-500">
-          Dashboard V2 • Real-time updates • Phase 3 Activity Timeline Complete
+          Dashboard V2 • Real-time updates • Phase 4 Stats & Action Queue Complete
         </div>
       </div>
     </div>

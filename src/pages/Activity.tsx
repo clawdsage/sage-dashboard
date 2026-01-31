@@ -57,13 +57,9 @@ const ActivityItem = memo(function ActivityItem({
   
   return (
     <div 
-      className={`border rounded-lg transition-all duration-200 ease-in-out ${colors.border} ${
+      className={`border rounded-lg ${colors.border} ${
         isExpanded ? 'bg-slate-800/50' : 'bg-slate-900/30'
-      } animate-fade-in`}
-      style={{ 
-        willChange: 'transform, opacity',
-        transition: 'all 0.2s ease-in-out'
-      }}
+      }`}
     >
       {/* Main Activity Row */}
       <div className="flex gap-4 p-4">
@@ -552,7 +548,7 @@ const Activity = () => {
           </div>
           <p className="text-xs text-slate-500 mt-3 flex items-center gap-1">
             <TrendingUp className="w-3 h-3" />
-            Auto-refreshes every 20s
+            Click Refresh to update
           </p>
         </div>
 

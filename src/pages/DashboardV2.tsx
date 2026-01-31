@@ -1,8 +1,29 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { useDashboardStore } from '../stores/dashboardStore';
 
+const generateProgressBar = (progress: number): string => {
+  const filled = Math.round((progress / 100) * 10);
+  const empty = 10 - filled;
+  return '█'.repeat(filled) + '░'.repeat(empty);
+};
+
 const DashboardV2: React.FC = () => {
-  const { agents, activities, stats } = useDashboardStore();
+  const { agents, activities, stats, loadAgentsFromSupabase, subscribeToAgents } = useDashboardStore();
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: agents.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 120, // estimated height per item
+    overscan: 5,
+  });
+
+  useEffect(() => {
+    loadAgentsFromSupabase();
+    const unsubscribe = subscribeToAgents();
+    return unsubscribe;
+  }, [loadAgentsFromSupabase, subscribeToAgents]);
 
   return (
     <div className="min-h-screen bg-slate-950 p-6">
@@ -23,31 +44,80 @@ const DashboardV2: React.FC = () => {
                 {agents.length} active
               </span>
             </div>
-            <div className="space-y-4">
-              {agents.length > 0 ? (
-                agents.map((agent) => (
-                  <div key={agent.id} className="bg-slate-800/50 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium text-slate-100">{agent.name}</h3>
-                        <p className="text-sm text-slate-400">{agent.model}</p>
+            {agents.length > 0 ? (
+              agents.length <= 10 ? (
+                <div className="space-y-4">
+                  {agents.map((agent) => (
+                    <div key={agent.id} className={`bg-slate-800/50 rounded-lg p-4 ${agent.status === 'running' ? 'animate-pulse' : ''}`}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium text-slate-100">{agent.name}</h3>
+                          <p className="text-sm text-slate-400">{agent.model || 'Unknown'}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-semibold text-slate-100">{agent.progress}%</div>
+                          <div className="text-xs text-slate-500">{agent.elapsedTime}</div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-lg font-semibold text-slate-100">{agent.progress}%</div>
-                        <div className="text-xs text-slate-500">{agent.elapsedTime}</div>
+                      <div className="mt-3">
+                        <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-blue-500 rounded-full"
+                            style={{ width: `${agent.progress}%` }}
+                          />
+                        </div>
+                        <div className="mt-1 text-xs text-slate-400 font-mono">
+                          {generateProgressBar(agent.progress)}
+                        </div>
                       </div>
                     </div>
-                    <div className="mt-3">
-                      <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-blue-500 rounded-full transition-all duration-300"
-                          style={{ width: `${agent.progress}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))
+                  ))}
+                </div>
               ) : (
+                <div ref={parentRef} className="max-h-96 overflow-auto">
+                  <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
+                    {virtualizer.getVirtualItems().map((virtualItem) => {
+                      const agent = agents[virtualItem.index];
+                      return (
+                        <div
+                          key={agent.id}
+                          className={`bg-slate-800/50 rounded-lg p-4 mb-4 ${agent.status === 'running' ? 'animate-pulse' : ''}`}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            transform: `translateY(${virtualItem.start}px)`,
+                          }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="font-medium text-slate-100">{agent.name}</h3>
+                              <p className="text-sm text-slate-400">{agent.model || 'Unknown'}</p>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-semibold text-slate-100">{agent.progress}%</div>
+                              <div className="text-xs text-slate-500">{agent.elapsedTime}</div>
+                            </div>
+                          </div>
+                          <div className="mt-3">
+                            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-blue-500 rounded-full"
+                                style={{ width: `${agent.progress}%` }}
+                              />
+                            </div>
+                            <div className="mt-1 text-xs text-slate-400 font-mono">
+                              {generateProgressBar(agent.progress)}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )
+            ) : (
                 <div className="text-center py-8">
                   <div className="text-slate-400">No active agents</div>
                   <div className="text-sm text-slate-500 mt-1">Agents will appear here when running</div>

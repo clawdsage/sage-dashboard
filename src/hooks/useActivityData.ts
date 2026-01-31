@@ -123,9 +123,11 @@ export const useActivityData = (
   }, [])
 
   // Fetch activity data
-  const fetchActivityData = useCallback(async () => {
+  const fetchActivityData = useCallback(async (showLoading = false) => {
     try {
-      setLoading(true)
+      if (showLoading) {
+        setLoading(true)
+      }
       
       // Build date filter
       let dateFilter = {}
@@ -198,7 +200,7 @@ export const useActivityData = (
   // Set up realtime subscription
   useEffect(() => {
     fetchProjects()
-    fetchActivityData()
+    fetchActivityData(true) // Show loading on initial fetch
 
     const channel = supabase
       .channel('activity-data-changes')
@@ -210,8 +212,8 @@ export const useActivityData = (
           table: 'subagent_runs'
         },
         () => {
-          // Refresh data when subagent runs change
-          fetchActivityData()
+          // Refresh data when subagent runs change (no loading indicator)
+          fetchActivityData(false)
         }
       )
       .subscribe()
@@ -221,20 +223,13 @@ export const useActivityData = (
     }
   }, [fetchProjects, fetchActivityData])
 
-  // Set up auto-refresh every 20 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchActivityData()
-    }, 20000) // 20 seconds
-
-    return () => clearInterval(interval)
-  }, [fetchActivityData])
+  // Removed auto-refresh interval - real-time subscription is sufficient
 
   return {
     activities,
     loading,
     error,
     stats,
-    refetch: fetchActivityData
+    refetch: () => fetchActivityData(true) // Show loading on manual refresh
   }
 }
